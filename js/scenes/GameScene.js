@@ -94,17 +94,17 @@ class GameScene extends Phaser.Scene {
             .setOrigin(0)
             .setDepth(10); // High depth so it's on top
 
-        // Create geometry for the mask (initially small circle around player)
-        this.maskGraphics = this.make.graphics();
-        this.maskGraphics.setDepth(11); // Above darkness layer
+        // Create a render texture for the bitmap mask
+        this.maskTexture = this.make.renderTexture({ width, height }, false);
 
-        // Create a small circle mask around player so they're always slightly visible
-        this.updateMask(30); // Small visibility radius
-
-        // Apply the mask to the darkness layer
-        // The mask works by showing ONLY the masked area as transparent
-        const mask = this.maskGraphics.createGeometryMask();
+        // Create bitmap mask with invertAlpha
+        // invertAlpha = true means: where we draw = darkness is HIDDEN (creates holes)
+        const mask = this.maskTexture.createBitmapMask();
+        mask.invertAlpha = true;
         this.darknessLayer.setMask(mask);
+
+        // Initialize mask with small circle around player
+        this.updateMask(30);
 
         // ======================
         // KEYBOARD CONTROLS
@@ -137,23 +137,27 @@ class GameScene extends Phaser.Scene {
     }
 
     /**
-     * Update the geometry mask
-     * @param {number} radius - Radius of the visible area
+     * Update the bitmap mask
+     * @param {number} radius - Radius of the visible area (where darkness is HIDDEN)
      */
     updateMask(radius) {
-        this.maskGraphics.clear();
+        // Clear the mask texture
+        this.maskTexture.clear();
 
-        // Draw circles at player position (makes player area visible)
-        this.maskGraphics.fillStyle(0xffffff, 1);
-        this.maskGraphics.fillCircle(this.player.x, this.player.y, radius);
+        // Create a temporary graphics object to draw the mask shape
+        const graphics = this.make.graphics();
+
+        // Draw circle at player position (creates hole in darkness)
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(this.player.x, this.player.y, radius);
 
         // Also reveal walls if radius is large enough (during echo)
         if (radius > 50) {
             this.walls.children.entries.forEach(wall => {
                 const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, wall.x, wall.y);
                 if (dist < radius) {
-                    // Reveal this wall
-                    this.maskGraphics.fillRect(
+                    // Reveal this wall (create hole in darkness)
+                    graphics.fillRect(
                         wall.x - wall.displayWidth / 2,
                         wall.y - wall.displayHeight / 2,
                         wall.displayWidth,
@@ -162,6 +166,14 @@ class GameScene extends Phaser.Scene {
                 }
             });
         }
+
+        // Draw the graphics to the mask texture
+        graphics.generateTexture('maskShape', this.cameras.main.width, this.cameras.main.height);
+        this.maskTexture.draw('maskShape', 0, 0);
+
+        // Clean up
+        graphics.destroy();
+        this.textures.remove('maskShape');
     }
 
     /**
