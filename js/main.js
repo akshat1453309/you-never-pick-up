@@ -10,8 +10,15 @@ const config = {
     width: 800,
     height: 600,
     parent: 'game-container',
-    backgroundColor: '#1a1a1a',
-    scene: [TypingScene, EndingScene],  // Register game scenes
+    backgroundColor: '#000000',
+    scene: [GameScene],  // Register game scene
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 },  // Top-down game, no gravity
+            debug: false  // Set to true to see collision boxes
+        }
+    },
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
