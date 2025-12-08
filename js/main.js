@@ -11,19 +11,11 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#1a1a1a',
-    scene: [],  // Scenes will be added as they're created
+    scene: [PhoneScene, ConversationScene],  // Register all game scenes
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
-    },
-    // Enable physics if needed (probably not for this game)
-    // physics: {
-    //     default: 'arcade',
-    //     arcade: {
-    //         gravity: { y: 0 },
-    //         debug: false
-    //     }
-    // }
+    }
 };
 
 // Create the game instance
