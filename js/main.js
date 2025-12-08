@@ -11,7 +11,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#1a1a1a',
-    scene: [PhoneScene, ConversationScene],  // Register all game scenes
+    scene: [TypingScene, EndingScene],  // Register game scenes
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
