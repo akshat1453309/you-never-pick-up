@@ -29,6 +29,7 @@ class GameScene extends Phaser.Scene {
         // Create player sprite with physics
         this.player = this.physics.add.sprite(width / 2, height / 2, 'player');
         this.player.setCollideWorldBounds(true);
+        this.player.setDepth(0); // Below darkness layer
 
         // ======================
         // CREATE WALLS (OBSTACLES)
@@ -42,9 +43,9 @@ class GameScene extends Phaser.Scene {
             const w = Phaser.Math.Between(40, 100);
             const h = Phaser.Math.Between(40, 100);
 
-            // Draw wall rectangle
+            // Draw wall rectangle (WHITE for better visibility)
             const wallGraphics = this.add.graphics();
-            wallGraphics.fillStyle(0x666666, 1);
+            wallGraphics.fillStyle(0xffffff, 1); // White walls
             wallGraphics.fillRect(0, 0, w, h);
             wallGraphics.generateTexture(`wall${i}`, w, h);
             wallGraphics.destroy();
@@ -52,6 +53,7 @@ class GameScene extends Phaser.Scene {
             // Create wall sprite
             const wall = this.walls.create(x, y, `wall${i}`);
             wall.setOrigin(0.5);
+            wall.setDepth(0); // Make sure walls are below darkness layer
             wall.refreshBody();
         }
 
@@ -124,6 +126,13 @@ class GameScene extends Phaser.Scene {
             color: '#ffffff',
             backgroundColor: '#000000',
             padding: { x: 5, y: 5 }
+        }).setDepth(15);
+
+        // Debug text
+        this.debugText = this.add.text(10, height - 30, '', {
+            fontSize: '12px',
+            fontFamily: 'Arial',
+            color: '#00ff00'
         }).setDepth(15);
     }
 
@@ -329,5 +338,13 @@ class GameScene extends Phaser.Scene {
         // ENEMY AI
         // ======================
         this.updateEnemyAI(delta);
+
+        // ======================
+        // DEBUG INFO
+        // ======================
+        this.debugText.setText(
+            `Echo Active: ${this.echoActive}\n` +
+            `Walls Visible: ${this.echoActive || (this.currentEchoRing && this.currentEchoRing.radius > 50)}`
+        );
     }
 }
