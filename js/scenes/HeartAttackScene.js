@@ -15,6 +15,10 @@ class HeartAttackScene extends Phaser.Scene {
     }
 
     create() {
+        console.log('💔 === HEART ATTACK SCENE CREATE ===');
+        console.log('📊 Data received - Ignored:', this.ignoredCalls, 'Total:', this.totalCalls);
+        console.log('🎬 Active Scenes:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
+
         const { width, height } = this.cameras.main;
 
         // Dark background
@@ -22,8 +26,6 @@ class HeartAttackScene extends Phaser.Scene {
 
         // Red overlay for heart attack effect
         this.redOverlay = this.add.rectangle(0, 0, width, height, 0xff0000, 0).setOrigin(0);
-
-        console.log('HeartAttackScene starting...');
 
         // Sequence of events
         this.time.delayedCall(1000, () => {
@@ -179,20 +181,22 @@ class HeartAttackScene extends Phaser.Scene {
             delay: 2500
         });
 
-        // CRITICAL FIX: Transition to ending reveal with full scene stop
+        // Transition to ending reveal (let Phaser handle scene cleanup automatically)
         this.time.delayedCall(4500, () => {
-            console.log('=== TRANSITIONING TO REVEAL ENDING SCENE ===');
-            console.log('Data being passed:', {
+            console.log('🔄 === TRANSITIONING TO REVEAL ENDING SCENE ===');
+            console.log('📊 Data being passed:', {
                 ignoredCalls: this.ignoredCalls,
                 totalCalls: this.totalCalls
             });
+            console.log('🎬 Scenes before transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
 
-            // Stop this scene completely before starting next
-            this.scene.stop('HeartAttackScene');
+            // Start next scene (Phaser will automatically clean up this scene)
             this.scene.start('RevealEndingScene', {
                 ignoredCalls: this.ignoredCalls,
                 totalCalls: this.totalCalls
             });
+
+            console.log('🎬 Scenes after transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
         });
     }
 }

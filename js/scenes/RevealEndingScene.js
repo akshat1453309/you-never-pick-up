@@ -6,7 +6,7 @@
 
 class RevealEndingScene extends Phaser.Scene {
     constructor() {
-        super({ key: 'EndingScene' });
+        super({ key: 'RevealEndingScene' });
     }
 
     init(data) {
@@ -15,6 +15,10 @@ class RevealEndingScene extends Phaser.Scene {
     }
 
     create() {
+        console.log('✨ === REVEAL ENDING SCENE CREATE ===');
+        console.log('📊 Data received - Ignored:', this.ignoredCalls, 'Total:', this.totalCalls);
+        console.log('🎬 Active Scenes:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
+
         const { width, height } = this.cameras.main;
 
         // Pure black background

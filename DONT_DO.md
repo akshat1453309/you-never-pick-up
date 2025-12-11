@@ -24,6 +24,38 @@ Where this applies
 
 ---
 
+## Production Issues (From Actual Development)
+
+### 2025-12-11 - Phaser Tweens: Infinite Tweens in Repeated Functions
+
+**What We Tried:**
+Created infinite loop tweens (`repeat: -1`) inside `updateHealthVisualization()`, which is called 10 times per second by the health drain timer. The tweens were guarded by flags like `this.healthPulseActive`, but new tweens were still created without cleaning up old ones.
+
+**Why It Failed:**
+- `updateHealthVisualization()` is called every 100ms (10x/second)
+- When health dropped below 30%, it created infinite tweens on health bar objects
+- When health dropped below 20%, it created camera rotation tweens and warning text tweens
+- Even with flags, tweens accumulated until Phaser's internal `_onUpdate.call` broke
+- Error: `Uncaught TypeError: this._onUpdate.call is not a function` at phaser.min.js:1
+- The crash occurred BEFORE any scene transitions, during normal gameplay
+
+**What to Do Instead:**
+1. **Never create infinite tweens in frequently-called functions**
+2. If you must use tweens in update loops:
+   - Store tween references (`this.myTween = this.tweens.add(...)`)
+   - Check if tween exists before creating: `if (!this.myTween) { ... }`
+   - Always call `.remove()` or `.destroy()` on old tweens before creating new ones
+3. Alternative: Remove animated effects entirely and use simple value updates
+4. Test with debug triggers (like '5' key to force low health) to catch these issues early
+
+**Related Code/Files:**
+- OfficeScene.js `updateHealthVisualization()` (lines 1119-1146)
+- Any function called by timers, update loops, or drain events
+
+**Lesson:** Phaser's tween system cannot handle hundreds of infinite tweens stacking on the same object. Simplicity beats fancy effects.
+
+---
+
 ## Pre-Project Lessons (From Handoff Document)
 
 ### 2024-12-08 - Game Design: Signal Stability Mechanic

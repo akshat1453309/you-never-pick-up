@@ -1,285 +1,209 @@
 # Project Context - You Never Pick Up
 
-**Last Updated:** December 8, 2024
-**Current Status:** Initial Setup
-**Current Day:** Pre-Day 1
+**Last Updated:** December 11, 2025
+**Current Status:** Existing Implementation - Bug Fixes Complete
+**Game Type:** Office Typing Game with Phone Call Interruptions
 
 ---
 
-## What This Game Is
+## What This Game Actually Is
 
-"You Never Pick Up" is a narrative-driven Phaser 3 game about distress, guilt, and self-neglect. Players receive multiple phone calls simultaneously from people in their life (Mom, Friend, Partner, Unknown). They can only talk to one person at a time, creating pressure and guilt. The twist: all the callers are different aspects of yourself that you've been neglecting.
+**IMPORTANT:** This project contains a DIFFERENT game than originally documented. The original phone management concept was replaced with a complete office typing game.
 
-**Theme:** DISTRESS (workshop theme)
-**Timeline:** 5 days
-**Emotional Goal:** Create guilt through sacrifice → Recognition of self-neglect pattern
+**Actual Game:** "You Never Pick Up" is a Phaser 3 office typing simulator where players type documents while being interrupted by phone calls from people in their life. Health drains passively and from ignoring calls. When health hits zero, the player dies from overwork, leading to a revelation that all callers were aspects of themselves they've been neglecting.
+
+**Core Gameplay:**
+- Type documents to complete work tasks
+- Receive phone calls from Mom, Sarah, Professor Chen, Emma, Marcus, Dr. Williams
+- Choose to answer (lose work time) or ignore (lose health)
+- Health drains passively over time
+- Death occurs at 0% health → Heart attack sequence
+- Final reveal: All callers represent different needs (connection, love, growth, joy, friendship, health)
+
+**Theme:** Overwork, self-neglect, work-life balance
+**Message:** "Work will always be there. You won't."
 
 ---
 
 ## Current State
 
-### What Exists
-- [x] Project folder structure created
-- [x] Documentation files initialized (RULES, PROJECT_CONTEXT, DONT_DO, PROGRESS_LOG, README)
-- [ ] .claude/settings.local.json with permissions
-- [ ] Slash commands (/start-session, /end-session, /check-before-commit)
-- [ ] index.html with Phaser CDN
-- [ ] main.js with Phaser config
-- [ ] Git repository initialized
-- [ ] Initial commit
+### What Exists (Fully Implemented)
+- [x] Complete Phaser 3 game with 6 scenes
+- [x] OfficeScene - Main gameplay with typing mechanics
+- [x] PhoneInterruptionScene - Incoming call overlay
+- [x] ConversationScene - Phone call dialogue system
+- [x] EndOfDayScene - Work day completion
+- [x] HeartAttackScene - Death sequence with red flashes and screen effects
+- [x] RevealEndingScene - Final emotional revelation about callers
+- [x] Health system with passive drain
+- [x] Timer system for typing tasks
+- [x] Phone UI with notifications
+- [x] Multiple callers with unique relationships
+- [x] Git repository with commit history
+- [x] Complete documentation structure
 
-### What Doesn't Exist Yet
-- [ ] Any Phaser scenes (PhoneScene, ConversationScene, RevelationScene)
-- [ ] Call management system
-- [ ] Dialogue system
-- [ ] Dialogue content/writing
-- [ ] Any assets (images, sounds)
-- [ ] UI implementation
-- [ ] Patience meter system
-- [ ] Revelation/twist sequence
-
----
-
-## Core Mechanics Design
-
-### 1. Call Management
-**How it works:**
-- Multiple incoming calls displayed on phone UI
-- Player clicks/taps to switch between conversations
-- Only ONE conversation can be active at a time
-- Inactive calls show notification badges
-
-**Implementation approach (planned):**
-- CallManager class tracks all active calls
-- Each call has: id, name, profileImage, messages[], patience, isActive
-- Switch call: pause current, activate selected, resume where left off
-
-### 2. Patience System (OPTIONAL - decide Day 2)
-**Option A - Meters (more gamey):**
-- Each call has patience value (starts at 100)
-- Drains slowly while ignored (e.g., -1 per second)
-- Visual meter shows current patience
-- At 0, person hangs up permanently
-
-**Option B - Narrative only:**
-- No meters, just increasingly desperate messages
-- Emotional pressure instead of mechanical timer
-- Simpler to implement
-
-**Decision:** Start without meters, add if time permits and feels right
-
-### 3. Conversation System
-**How it works:**
-- Text messages appear one at a time
-- Player sees 2-4 dialogue choice buttons
-- Clicking a choice advances conversation
-- Choices are mostly illusion (linear narrative with branching feel)
-
-**Implementation approach:**
-- DialogueManager loads dialogue from dialogue.js
-- Tracks current conversation position for each caller
-- Handles choice selection → next message mapping
-
-### 4. Revelation Sequence
-**How the twist is revealed:**
-1. Final call from "Unknown" becomes increasingly surreal
-2. Unknown reveals personal details only YOU would know
-3. Screen glitches (optional visual effect)
-4. Contact photo fades out
-5. Fades back in showing YOUR photo
-6. Explicit dialogue: "All of them. Every voice. It was always me."
-
-**Implementation approach:**
-- Simple fade transition (Day 1-4)
-- Upgrade to glitch effect if time (Day 5)
-- Use Phaser tweens for smooth transitions
-
----
-
-## File Structure
-
+### Files
 ```
 you-never-pick-up/
-├── index.html                 # Main entry point, Phaser CDN
+├── index.html                     # Entry point, Phaser 3.55.2 CDN
 ├── js/
-│   ├── main.js               # Phaser config, game init
-│   ├── scenes/
-│   │   ├── PhoneScene.js         # Main phone UI (call list)
-│   │   ├── ConversationScene.js  # Active conversation view
-│   │   └── RevelationScene.js    # Final twist sequence
-│   ├── managers/
-│   │   ├── CallManager.js        # State management for calls
-│   │   └── DialogueManager.js    # Conversation flow logic
-│   └── data/
-│       └── dialogue.js           # All conversation content
-├── assets/
-│   ├── images/
-│   │   ├── phone_frame.png       # Phone UI background
-│   │   ├── profile_*.png         # Contact photos (5 total)
-│   │   └── backgrounds/          # Optional atmosphere
-│   └── sounds/
-│       ├── phone_ring.mp3        # Incoming call
-│       ├── notification.mp3      # New message alert
-│       ├── hangup.mp3            # Call ended
-│       ├── static.mp3            # Glitch effect
-│       └── ambient.mp3           # Background tension
-├── css/
-│   └── style.css                 # Minimal styling
-├── .claude/
-│   ├── commands/
-│   │   ├── start-session.md      # Load context
-│   │   ├── end-session.md        # Update docs
-│   │   └── check-before-commit.md # Pre-commit checklist
-│   └── settings.local.json       # Permissions config
-├── RULES.md                      # Coding standards
-├── PROJECT_CONTEXT.md            # This file
-├── DONT_DO.md                    # Anti-patterns
-├── PROGRESS_LOG.md               # Session changelog
-└── README.md                     # Project overview
+│   ├── main.js                   # Phaser config
+│   └── scenes/
+│       ├── OfficeScene.js        # Main gameplay (1444 lines)
+│       ├── PhoneInterruptionScene.js
+│       ├── ConversationScene.js
+│       ├── EndOfDayScene.js
+│       ├── HeartAttackScene.js
+│       └── RevealEndingScene.js
+├── assets/images/
+│   └── office_desk_rough.png     # Office background
+├── .claude/commands/
+│   ├── start-session.md
+│   ├── end-session.md
+│   └── check-before-commit.md
+├── RULES.md
+├── PROJECT_CONTEXT.md (this file)
+├── DONT_DO.md
+├── PROGRESS_LOG.md
+└── README.md
 ```
 
 ---
 
-## Key Design Decisions
+## Recent Bug Fixes (Session Dec 11, 2025)
 
-### Decision 1: Phaser via CDN (No Build Process)
-**Reasoning:** Faster setup, simpler deployment, focus on game logic not tooling
-**Trade-off:** No TypeScript, no module bundling, but acceptable for 5-day scope
+### Fixed Issues
 
-### Decision 2: Call Switching Over Signal Stability Mechanic
-**Reasoning:** Signal mechanics felt disconnected from emotional narrative
-**Alternative considered:** Drag slider to maintain signal strength
-**Chosen:** Simple call switching creates same guilt through choice prioritization
+1. **RevealEndingScene Constructor Key Mismatch**
+   - Issue: Constructor had `key: 'EndingScene'` but main.js referenced `'RevealEndingScene'`
+   - Fix: Changed constructor to match reference
+   - File: [RevealEndingScene.js:9](js/scenes/RevealEndingScene.js#L9)
 
-### Decision 3: 4 Core Calls (Scalable to 5-6)
-**Core 4:**
-1. Mom (need for approval/validation)
-2. Friend (loneliness/social needs)
-3. Partner (need for love/connection)
-4. Unknown/You (the truth)
+2. **Favicon 404 Error**
+   - Issue: Browser requested /favicon.ico causing console error
+   - Fix: Added `<link rel="icon" href="data:,">` to suppress request
+   - File: [index.html:7](index.html#L7)
 
-**Optional 5th/6th:**
-5. Sibling/Child (inner child)
-6. Past/Future You (time variant)
+3. **Scene Transition Crashes**
+   - Issue: Explicit `scene.stop()` calls caused race conditions
+   - Fix: Removed manual stop calls, let Phaser handle scene cleanup automatically
+   - Files: OfficeScene.js, HeartAttackScene.js
 
-**Reasoning:** 4 creates sufficient overwhelm without exhausting player
+4. **Critical: Infinite Tween Crash (`this._onUpdate.call is not a function`)**
+   - Issue: `updateHealthVisualization()` created new infinite tweens every frame (10x/second) when health was low, stacking until Phaser's update loop broke
+   - Root Cause: Health pulse tweens (<=30% health) and critical health tweens (<=20% health) were created without proper guards or cleanup
+   - Fix: Completely removed all infinite tween effects from health visualization
+   - File: [OfficeScene.js:1119-1146](js/scenes/OfficeScene.js#L1119-L1146)
+   - **Removed Effects:**
+     - Health bar pulse tweens
+     - Camera rotation tweens
+     - Warning overlay tweens
+     - Screen flash/shake effects
+     - Darkness/vignette effects
+   - **Kept:** Simple health bar width/color updates only
 
-### Decision 4: Simple Fade Transition (Upgradable)
-**Day 1-4:** Use basic fade (functional, fast to implement)
-**Day 5:** If time, upgrade to glitch effect for polish
-**Reasoning:** Emotional impact is in dialogue, not visual effect
+5. **Debug Features Added**
+   - Added '5' key debug trigger to set health to 5% instantly for testing
+   - Added comprehensive console logging with emoji markers (💀, 📊, 🎬, etc.)
+   - Added scene transition tracking
+   - File: [OfficeScene.js:74-78](js/scenes/OfficeScene.js#L74-L78)
 
-### Decision 5: Single Ending with Choice Variants
-**Final choice options:**
-1. "I promise I will." (hopeful)
-2. "I don't know how." (honest/vulnerable)
-3. "I'm sorry." (guilt/regret)
+### Testing Status
+- [x] Scene key mismatch fixed
+- [x] Favicon error eliminated
+- [x] Infinite tween crash resolved
+- [ ] Full game playthrough tested (pending user confirmation)
 
-**All lead to same message:** Recognition of self-neglect pattern
-**Reasoning:** Message is consistent, choice lets player express emotional state
+---
+
+## Known Technical Details
+
+### Health System
+- Starts at 100%
+- Drains at 0.05% per 100ms (0.5% per second) passively
+- Loses 10% when ignoring calls
+- Loses health when answering calls (time away from work)
+- Death triggers at 0% health
+
+### Scene Flow
+```
+OfficeScene (main gameplay)
+    ↓ (phone rings)
+PhoneInterruptionScene (answer/ignore choice)
+    ↓ (if answer)
+ConversationScene (dialogue with caller)
+    ↓ (return to work)
+OfficeScene
+    ↓ (clock out OR health = 0)
+EndOfDayScene OR HeartAttackScene
+    ↓
+RevealEndingScene (final message)
+    ↓ (restart)
+OfficeScene (new game)
+```
+
+### Callers & Their Meanings
+1. **Mom** → "Your need for connection"
+2. **Sarah** → "Your need for love"
+3. **Professor Chen** → "Your need to grow"
+4. **Emma** → "Your need for joy"
+5. **Marcus** → "Your need for friendship"
+6. **Dr. Williams** → "Your need for health"
+
+---
+
+## Key Implementation Decisions
+
+### Phaser via CDN
+- Using Phaser 3.55.2 from jsdelivr CDN
+- No build process, direct browser execution
+- All code in global scope (no modules)
+
+### Scene Management
+- Phaser handles scene lifecycle automatically
+- Use `scene.start()` not `scene.stop()` + `scene.launch()`
+- Avoid manual cleanup, let Phaser dispose old scenes
+
+### Tween Management
+- **CRITICAL LESSON:** Never create infinite tweens (`repeat: -1`) in functions called repeatedly
+- Always store tween references for cleanup
+- Alternative: Remove tween effects entirely if they cause issues
+
+### Health Visualization
+- Simplified to avoid tween complexity
+- Simple width/color updates only
+- No animated effects to prevent crashes
 
 ---
 
 ## Immediate Next Steps
 
-### Session 1 Goals (Day 1 - Core Prototype)
-- [ ] Complete environment setup (.claude config, Git init)
-- [ ] Create index.html with Phaser CDN
-- [ ] Create main.js with basic Phaser config
-- [ ] Create PhoneScene.js (basic structure)
-- [ ] Display phone UI mockup (can be placeholder rectangle)
-- [ ] Show incoming call from "Mom"
-- [ ] Implement "Answer" button
-- [ ] Create ConversationScene.js
-- [ ] Display one conversation (Mom, 5-8 messages)
-- [ ] Show 2 dialogue choice buttons
-- [ ] Choices advance conversation
-- [ ] Test: Full playthrough of Mom's call
-
-**Success criteria:** Can answer a call, have a conversation, make a choice
+1. Test full game playthrough after bug fixes
+2. Verify death sequence works both ways:
+   - Pressing '5' debug key
+   - Natural health drain to 0%
+3. Ensure reveal scene appears correctly
+4. Confirm restart button works
 
 ---
 
 ## Open Questions
 
-### Narrative
-- [ ] Should self-neglect montage be specific scenes or abstract imagery?
-- [ ] Do we name the player character or keep ambiguous?
-- [ ] Post-credits resource link? (mental health support)
-
-### Mechanics
-- [ ] Exact patience meter drain timing (if implemented)
-- [ ] Can you call someone back after they hang up?
-- [ ] Show message history of missed conversations?
-
-### Polish
-- [ ] Background music or just ambient sound?
-- [ ] Text-to-speech voice acting or pure text?
-- [ ] Accessibility options (text size, color blind mode)?
-
-**Decision strategy:** Start minimal, add only if enhances emotional impact
+- Should health visualization effects be re-added with proper guards?
+- Any other visual feedback needed when health is low?
+- Performance testing needed on slower devices?
 
 ---
 
-## Known Issues/Limitations
+## Success Criteria (Current State)
 
-### Technical Constraints
-- No localStorage in some deployment contexts (use in-memory state)
-- Browser audio policy: sound requires user interaction first
-- Mobile touch vs desktop mouse (need to handle both)
-
-### Scope Constraints
-- First-time Phaser developer (learning curve expected)
-- 5-day timeline (aggressive, requires scope discipline)
-- Single artist (limited asset production bandwidth)
-- Must be browser-playable (no native features)
-
-### Risks
-- **Biggest risk:** Over-scoping features, not finishing core experience
-- **Mitigation:** Ruthlessly cut non-essential features, focus on emotional core
+✅ Game runs without crashes
+✅ All scene transitions work
+✅ Death sequence triggers correctly
+✅ Final reveal message displays
+✅ Restart functionality works
+⏳ Full playthrough tested (pending)
 
 ---
 
-## Success Criteria
-
-### Minimum Viable Product
-1. Answer multiple calls
-2. Switch between conversations
-3. Feel guilt/overwhelm from juggling
-4. Final reveal: they're all you
-5. One ending with self-care message
-
-### Workshop Success
-- Demonstrates clear "distress" theme interpretation
-- Complete experience (start to end, no broken states)
-- Shows technical competence (working Phaser game)
-- Creates emotional response in players
-- Well-documented process
-
-### Nice to Have (If Time Permits)
-- Patience meter system
-- Sound effects and ambient audio
-- Glitch transition effects
-- Multiple conversation branches
-- Polish animations (tweens, particles)
-
----
-
-## Development Philosophy
-
-**Core Principle:** "Constraints breed creativity"
-
-Focus on ONE idea executed perfectly rather than many ideas half-done. The 5-day limit is a feature, not a bug.
-
-**Priority Order:**
-1. Get something playable (answer call, see conversation)
-2. Add core loop (switching between calls)
-3. Implement twist (revelation sequence)
-4. Polish what exists (don't add new features)
-5. Test and balance (make it feel right)
-
-**When stuck:** Simplify. What's the MINIMUM to make this work?
-
----
-
-**This document is living and should be updated after each session.**
+**This document reflects the actual implemented game, not the original design concept.**

@@ -70,6 +70,13 @@ class OfficeScene extends Phaser.Scene {
         this.handleKeyPress = this.handleKeyPress.bind(this);
         this.handleDialogueKey = this.handleDialogueKey.bind(this);
 
+        // DEBUG: Press '5' to set health to 5% for quick testing
+        this.input.keyboard.on('keydown-FIVE', () => {
+            console.log('DEBUG: Setting health to 5%');
+            this.health = 5;
+            this.updateHealthVisualization();
+        });
+
         // Show notification after fade in completes
         this.time.delayedCall(2000, () => {
             this.showBossNotification();
@@ -1059,18 +1066,7 @@ class OfficeScene extends Phaser.Scene {
         this.phoneActive = false;
         this.ignoredCalls++;
 
-        // CRITICAL FIX: Ensure timer event is still running after declining call
-        if (!this.timerEvent || !this.timerEvent.paused) {
-            console.log('Timer event lost after declining call - recreating');
-            this.timerEvent = this.time.addEvent({
-                delay: 100,
-                callback: this.updateTimer,
-                callbackScope: this,
-                loop: true
-            });
-        }
-
-        // CRITICAL FIX: Ensure keyboard is still active
+        // Re-enable keyboard input
         this.input.keyboard.off('keydown', this.handleKeyPress, this);
         this.input.keyboard.on('keydown', this.handleKeyPress, this);
 
@@ -1100,18 +1096,7 @@ class OfficeScene extends Phaser.Scene {
     returnFromConversation(timeSpent) {
         this.phoneActive = false;
 
-        // CRITICAL FIX: Ensure timer event is still running after phone call
-        if (!this.timerEvent || !this.timerEvent.paused) {
-            console.log('Timer event lost during phone call - recreating');
-            this.timerEvent = this.time.addEvent({
-                delay: 100,
-                callback: this.updateTimer,
-                callbackScope: this,
-                loop: true
-            });
-        }
-
-        // CRITICAL FIX: Ensure keyboard is still active
+        // Re-enable keyboard input
         this.input.keyboard.off('keydown', this.handleKeyPress, this);
         this.input.keyboard.on('keydown', this.handleKeyPress, this);
 
@@ -1132,24 +1117,8 @@ class OfficeScene extends Phaser.Scene {
     }
 
     updateHealthVisualization() {
-        // Symbolic health display through darkness and color
+        // Simple health bar update only - no fancy effects
         const healthPercent = Math.max(0, this.health / 100);
-
-        // Darkness increases as health drops (0 health = 70% darkness)
-        if (this.darknessOverlay) {
-            const darknessAlpha = 0.7 * (1 - healthPercent);
-            this.darknessOverlay.setAlpha(darknessAlpha);
-        }
-
-        // Vignette gets stronger as health drops
-        if (this.vignette) {
-            const vignetteAlpha = 0.5 * (1 - healthPercent);
-            this.vignette.setAlpha(vignetteAlpha);
-        }
-
-        // Color desaturation - fade from normal to grayscale
-        const colorTint = this.interpolateColor(0xffffff, 0x666666, 1 - healthPercent);
-        this.cameras.main.setTint(colorTint);
 
         // Update health bar UI
         if (this.healthBarFill && this.healthText) {
@@ -1168,97 +1137,6 @@ class OfficeScene extends Phaser.Scene {
                 this.healthBarFill.setFillStyle(0xff9900); // Orange
             } else {
                 this.healthBarFill.setFillStyle(0xe74c3c); // Red
-            }
-
-            // === ENHANCED EFFECTS ===
-            // Pulse effect when health is low
-            if (healthPercent <= 0.3 && !this.healthPulseActive) {
-                this.healthPulseActive = true;
-
-                // Health bar pulse
-                this.tweens.add({
-                    targets: [this.healthBarFill, this.healthBarBg],
-                    scaleX: 1.05,
-                    scaleY: 1.15,
-                    duration: 800,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-
-                // Screen pulse (heartbeat effect)
-                this.time.addEvent({
-                    delay: 1200,
-                    callback: () => {
-                        if (this.health > 30) {
-                            this.healthPulseActive = false;
-                            return;
-                        }
-
-                        // Quick flash
-                        this.cameras.main.flash(100, 100, 0, 0, false, 0.15);
-
-                        // Subtle screen shake
-                        this.cameras.main.shake(100, 0.002);
-                    },
-                    loop: true
-                });
-            } else if (healthPercent > 0.3 && this.healthPulseActive) {
-                // Stop pulse when health recovers
-                this.healthPulseActive = false;
-                this.tweens.killTweensOf([this.healthBarFill, this.healthBarBg]);
-                this.healthBarFill.setScale(1);
-                this.healthBarBg.setScale(1);
-            }
-
-            // Critical health - screen distortion
-            if (healthPercent <= 0.2 && !this.criticalHealthActive) {
-                this.criticalHealthActive = true;
-
-                // Add chromatic aberration effect (camera rotation wobble)
-                this.tweens.add({
-                    targets: this.cameras.main,
-                    rotation: 0.01,
-                    duration: 400,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-
-                // Warning text flashing
-                if (!this.warningOverlay) {
-                    this.warningOverlay = this.add.text(
-                        this.cameras.main.width / 2,
-                        50,
-                        '⚠ CRITICAL HEALTH ⚠',
-                        {
-                            fontSize: '18px',
-                            fontFamily: 'Arial, sans-serif',
-                            color: '#ff0000',
-                            fontStyle: 'bold',
-                            stroke: '#000000',
-                            strokeThickness: 4
-                        }
-                    ).setOrigin(0.5).setDepth(150);
-
-                    this.tweens.add({
-                        targets: this.warningOverlay,
-                        alpha: 0.3,
-                        duration: 500,
-                        yoyo: true,
-                        repeat: -1
-                    });
-                }
-            } else if (healthPercent > 0.2 && this.criticalHealthActive) {
-                // Stop critical effects when health recovers
-                this.criticalHealthActive = false;
-                this.tweens.killTweensOf(this.cameras.main);
-                this.cameras.main.rotation = 0;
-
-                if (this.warningOverlay) {
-                    this.warningOverlay.destroy();
-                    this.warningOverlay = null;
-                }
             }
         }
 
@@ -1293,27 +1171,41 @@ class OfficeScene extends Phaser.Scene {
     }
 
     triggerHeartAttack() {
-        console.log('=== TRIGGERING HEART ATTACK ===');
-        console.log('Ignored Calls:', this.ignoredCalls);
-        console.log('Total Calls:', this.totalCalls);
+        // Prevent multiple triggers (can be called from multiple places when health hits 0)
+        if (this.heartAttackTriggered) {
+            console.log('❌ Heart attack already triggered, ignoring duplicate call');
+            return;
+        }
+        this.heartAttackTriggered = true;
+
+        console.log('💀 === TRIGGERING HEART ATTACK ===');
+        console.log('📊 Current Health:', this.health);
+        console.log('📞 Ignored Calls:', this.ignoredCalls, '/', this.totalCalls);
+        console.log('🎬 Active Scenes:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
 
         // Clean up events
         if (this.timerEvent) this.timerEvent.remove();
         if (this.healthDrainEvent) this.healthDrainEvent.remove();
         this.input.keyboard.off('keydown', this.handleKeyPress, this);
 
+        // CRITICAL: Kill all tweens to prevent callback errors during scene transition
+        this.tweens.killAll();
+
         // Hide timer
         if (this.timerContainer) {
             this.timerContainer.setVisible(false);
         }
 
-        // CRITICAL FIX: Ensure we stop this scene completely before starting HeartAttackScene
-        console.log('Starting HeartAttackScene...');
-        this.scene.stop('OfficeScene');
+        // Transition to HeartAttackScene (let Phaser handle scene cleanup automatically)
+        console.log('🚀 Starting HeartAttackScene...');
+        console.log('🎬 Scenes before transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
+
         this.scene.start('HeartAttackScene', {
             ignoredCalls: this.ignoredCalls,
             totalCalls: this.totalCalls
         });
+
+        console.log('🎬 Scenes after transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
     }
 
     getCaller(callNumber) {
