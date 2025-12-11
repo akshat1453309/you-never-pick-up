@@ -9,6 +9,11 @@ class EndOfDayScene extends Phaser.Scene {
         super({ key: 'EndOfDayScene' });
     }
 
+    preload() {
+        // Load shop background image
+        this.load.image('shop_bg', 'assets/images/shop_background.png');
+    }
+
     init(data) {
         this.workDay = data.workDay || 1;
         this.money = data.money || 0;
@@ -21,8 +26,25 @@ class EndOfDayScene extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
-        // Background
-        this.add.rectangle(0, 0, width, height, 0x0a0a0a).setOrigin(0);
+        // Set background color
+        this.cameras.main.setBackgroundColor('#0a0a0a');
+
+        // Shop background image - Cover entire screen without stretching
+        if (this.textures.exists('shop_bg')) {
+            this.background = this.add.image(width / 2, height / 2, 'shop_bg')
+                .setDepth(0);
+
+            // Calculate scale to cover screen while maintaining aspect ratio
+            const scaleX = width / this.background.width;
+            const scaleY = height / this.background.height;
+            const scale = Math.max(scaleX, scaleY);
+
+            // Apply scale to cover entire screen
+            this.background.setScale(scale);
+        } else {
+            // Fallback to solid color if image doesn't load
+            this.add.rectangle(0, 0, width, height, 0x0a0a0a).setOrigin(0);
+        }
 
         // Title
         this.add.text(width / 2, 60, `End of Day ${this.workDay}`, {

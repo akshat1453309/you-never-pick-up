@@ -27,6 +27,15 @@ class HeartAttackScene extends Phaser.Scene {
         // Red overlay for heart attack effect
         this.redOverlay = this.add.rectangle(0, 0, width, height, 0xff0000, 0).setOrigin(0);
 
+        // DEBUG: Press SPACE to skip to reveal scene immediately
+        this.input.keyboard.on('keydown-SPACE', () => {
+            console.log('🔥 DEBUG: Forcing transition to RevealEndingScene');
+            this.scene.start('RevealEndingScene', {
+                ignoredCalls: this.ignoredCalls,
+                totalCalls: this.totalCalls
+            });
+        });
+
         // Sequence of events
         this.time.delayedCall(1000, () => {
             this.showChestPain();
@@ -198,5 +207,11 @@ class HeartAttackScene extends Phaser.Scene {
 
             console.log('🎬 Scenes after transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
         });
+    }
+
+    shutdown() {
+        console.log('💔 === HEART ATTACK SCENE SHUTDOWN ===');
+        // Remove all keyboard listeners to prevent interference with other scenes
+        this.input.keyboard.removeAllListeners();
     }
 }

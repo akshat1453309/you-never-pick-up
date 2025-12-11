@@ -4,6 +4,16 @@
  * This file initializes Phaser and configures the game canvas and settings.
  */
 
+// DEBUG: Check which scene classes are defined
+console.log('=== SCENE CLASS AVAILABILITY CHECK ===');
+console.log('OfficeScene:', typeof OfficeScene);
+console.log('PhoneInterruptionScene:', typeof PhoneInterruptionScene);
+console.log('ConversationScene:', typeof ConversationScene);
+console.log('EndOfDayScene:', typeof EndOfDayScene);
+console.log('HeartAttackScene:', typeof HeartAttackScene);
+console.log('RevealEndingScene:', typeof RevealEndingScene);
+console.log('=== END SCENE CLASS CHECK ===');
+
 // Game configuration
 const config = {
     type: Phaser.AUTO,

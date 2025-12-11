@@ -6,12 +6,17 @@
 
 class RevealEndingScene extends Phaser.Scene {
     constructor() {
+        console.log('🏗️ === REVEAL ENDING SCENE CONSTRUCTOR ===');
         super({ key: 'RevealEndingScene' });
+        console.log('🏗️ === REVEAL ENDING SCENE CONSTRUCTOR COMPLETE ===');
     }
 
     init(data) {
+        console.log('🔧 === REVEAL ENDING SCENE INIT ===');
+        console.log('🔧 Data received:', data);
         this.ignoredCalls = data.ignoredCalls || 0;
         this.totalCalls = data.totalCalls || 0;
+        console.log('🔧 === REVEAL ENDING SCENE INIT COMPLETE ===');
     }
 
     create() {

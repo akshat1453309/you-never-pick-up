@@ -1333,4 +1333,13 @@ class OfficeScene extends Phaser.Scene {
 
         return selectedDoc;
     }
+
+    shutdown() {
+        console.log('=== OFFICE SCENE SHUTDOWN ===');
+        // Remove resize event listener to prevent null reference errors in other scenes
+        this.scale.off('resize', this.handleResize, this);
+
+        // Remove all keyboard listeners to prevent interference with other scenes
+        this.input.keyboard.removeAllListeners();
+    }
 }
