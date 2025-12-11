@@ -1,44 +1,53 @@
 /**
- * ConversationScene - Show conversation on phone screen (GTA-style)
+ * PhoneInterruptionScene - GTA-style phone call with 3D phone object
  *
- * Phone stays visible, dialogue appears on phone screen
+ * Shows realistic phone sliding up from bottom-right
  */
 
-class ConversationScene extends Phaser.Scene {
+class PhoneInterruptionScene extends Phaser.Scene {
     constructor() {
-        super({ key: 'ConversationScene' });
+        super({ key: 'PhoneInterruptionScene' });
     }
 
     init(data) {
         this.caller = data.caller;
         this.officeScene = data.officeScene;
-        this.currentLine = 0;
-        this.conversationStartTime = Date.now();
     }
 
     create() {
         const { width, height } = this.cameras.main;
 
-        // Create phone container (same as PhoneInterruptionScene)
+        // Create phone container
         this.phoneContainer = this.add.container(0, 0).setDepth(500);
 
         // Phone dimensions
         const phoneWidth = 220;
         const phoneHeight = 420;
-        const phoneX = width - 130;
-        const phoneY = height - phoneHeight / 2 - 30;
+        const phoneX = width - 130; // Bottom-right positioning
+        const phoneStartY = height + phoneHeight / 2; // Start off-screen
+        const phoneEndY = height - phoneHeight / 2 - 30; // Final position
 
         // Create 3D phone sprite
         this.createPhoneSprite(phoneWidth, phoneHeight);
 
-        // Position phone (already on screen from previous scene)
-        this.phoneContainer.setPosition(phoneX, phoneY);
+        // Position phone off-screen initially
+        this.phoneContainer.setPosition(phoneX, phoneStartY);
 
-        // Add conversation screen
-        this.createConversationScreen(phoneWidth, phoneHeight);
+        // Slide phone up animation
+        this.tweens.add({
+            targets: this.phoneContainer,
+            y: phoneEndY,
+            duration: 500,
+            ease: 'Back.easeOut'
+        });
 
-        // Start conversation
-        this.showNextLine();
+        // Add phone screen content
+        this.createPhoneScreen(phoneWidth, phoneHeight);
+
+        // Vibration effect
+        this.time.delayedCall(500, () => {
+            this.vibratePhone();
+        });
     }
 
     createPhoneSprite(phoneWidth, phoneHeight) {
@@ -128,7 +137,9 @@ class ConversationScene extends Phaser.Scene {
         });
     }
 
-    createConversationScreen(phoneWidth, phoneHeight) {
+    createPhoneScreen(phoneWidth, phoneHeight) {
+        const screenY = -40;
+
         // Status bar time
         const timeText = this.add.text(0, -(phoneHeight / 2) + 35, '9:41', {
             fontSize: '12px',
@@ -137,158 +148,165 @@ class ConversationScene extends Phaser.Scene {
         }).setOrigin(0.5);
         this.phoneContainer.add(timeText);
 
-        // Call timer at top
-        this.callTimer = this.add.text(0, -(phoneHeight / 2) + 55, '00:00', {
-            fontSize: '14px',
+        // Caller photo circle (generic avatar)
+        const callerPhoto = this.add.circle(0, screenY - 60, 40, 0x4a90e2);
+        this.phoneContainer.add(callerPhoto);
+
+        // Caller initials
+        const initials = this.caller.name.split(' ').map(n => n[0]).join('');
+        const initialsText = this.add.text(0, screenY - 60, initials, {
+            fontSize: '24px',
             fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
-            color: '#2ecc71',
+            color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
-        this.phoneContainer.add(this.callTimer);
+        this.phoneContainer.add(initialsText);
 
-        // Update call timer
-        this.time.addEvent({
-            delay: 1000,
-            callback: this.updateCallTimer,
-            callbackScope: this,
-            loop: true
-        });
-
-        // Caller name header
-        const nameText = this.add.text(0, -(phoneHeight / 2) + 80, this.caller.name, {
-            fontSize: '16px',
+        // Caller name
+        const nameText = this.add.text(0, screenY, this.caller.name, {
+            fontSize: '20px',
             fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
             color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
         this.phoneContainer.add(nameText);
 
-        // Dialogue area (scrollable text area)
-        this.dialogueContainer = this.add.container(0, -30);
-        this.phoneContainer.add(this.dialogueContainer);
+        // Caller relationship
+        const relationText = this.add.text(0, screenY + 25, this.caller.relationship, {
+            fontSize: '14px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
+            color: '#888888'
+        }).setOrigin(0.5);
+        this.phoneContainer.add(relationText);
 
-        // End call button (red)
-        const endCallBtn = this.add.circle(0, (phoneHeight / 2) - 65, 35, 0xe74c3c);
-        endCallBtn.setInteractive({ useHandCursor: true });
-        endCallBtn.setStrokeStyle(3, 0xc0392b);
-        this.phoneContainer.add(endCallBtn);
+        // "incoming call" text with pulse
+        const incomingText = this.add.text(0, screenY + 55, 'incoming call...', {
+            fontSize: '13px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
+            color: '#4a90e2'
+        }).setOrigin(0.5);
+        this.phoneContainer.add(incomingText);
 
-        const endCallIcon = this.add.text(0, (phoneHeight / 2) - 65, '✕', {
+        this.tweens.add({
+            targets: incomingText,
+            alpha: 0.4,
+            duration: 800,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Answer button (green circle)
+        const answerBtn = this.add.circle(-50, screenY + 130, 35, 0x2ecc71);
+        answerBtn.setInteractive({ useHandCursor: true });
+        answerBtn.setStrokeStyle(3, 0x27ae60);
+        this.phoneContainer.add(answerBtn);
+
+        const answerIcon = this.add.text(-50, screenY + 130, '📞', {
+            fontSize: '28px'
+        }).setOrigin(0.5);
+        this.phoneContainer.add(answerIcon);
+
+        const answerLabel = this.add.text(-50, screenY + 175, 'Answer', {
+            fontSize: '11px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+        this.phoneContainer.add(answerLabel);
+
+        // Decline button (red circle)
+        const declineBtn = this.add.circle(50, screenY + 130, 35, 0xe74c3c);
+        declineBtn.setInteractive({ useHandCursor: true });
+        declineBtn.setStrokeStyle(3, 0xc0392b);
+        this.phoneContainer.add(declineBtn);
+
+        const declineIcon = this.add.text(50, screenY + 130, '✕', {
             fontSize: '32px',
             fontFamily: 'Arial',
             color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
-        this.phoneContainer.add(endCallIcon);
+        this.phoneContainer.add(declineIcon);
 
-        const endCallLabel = this.add.text(0, (phoneHeight / 2) - 25, 'End Call', {
+        const declineLabel = this.add.text(50, screenY + 175, 'Decline', {
             fontSize: '11px',
             fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
             color: '#ffffff'
         }).setOrigin(0.5);
-        this.phoneContainer.add(endCallLabel);
+        this.phoneContainer.add(declineLabel);
 
-        // Button interaction
-        endCallBtn.on('pointerdown', () => {
-            this.endConversation();
+        // Button interactions
+        answerBtn.on('pointerdown', () => {
+            this.answerCall();
         });
 
-        // Hover effect
-        endCallBtn.on('pointerover', () => {
+        declineBtn.on('pointerdown', () => {
+            this.declineCall();
+        });
+
+        // Hover effects
+        answerBtn.on('pointerover', () => {
             this.tweens.add({
-                targets: endCallBtn,
+                targets: answerBtn,
                 scaleX: 1.1,
                 scaleY: 1.1,
                 duration: 100
             });
         });
-        endCallBtn.on('pointerout', () => {
+        answerBtn.on('pointerout', () => {
             this.tweens.add({
-                targets: endCallBtn,
+                targets: answerBtn,
                 scaleX: 1,
                 scaleY: 1,
                 duration: 100
             });
         });
 
-        this.dialogueTexts = [];
-    }
-
-    updateCallTimer() {
-        const elapsed = Math.floor((Date.now() - this.conversationStartTime) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        this.callTimer.setText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-    }
-
-    showNextLine() {
-        if (this.currentLine >= this.caller.dialogue.length) {
-            // Auto-end after last line
-            this.time.delayedCall(2000, () => {
-                this.endConversation();
-            });
-            return;
-        }
-
-        const line = this.caller.dialogue[this.currentLine];
-
-        // Calculate yPos based on previous messages' actual heights
-        let yPos = -60; // Starting position
-        const messageGap = 8; // Gap between messages
-
-        if (this.dialogueTexts.length > 0) {
-            // Get the last message
-            const lastMessage = this.dialogueTexts[this.dialogueTexts.length - 1];
-            // Position new message below the last one
-            yPos = lastMessage.y + lastMessage.height + messageGap;
-        }
-
-        // Message bubble
-        const messageText = this.add.text(-70, yPos, line.text, {
-            fontSize: '12px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
-            color: '#ffffff',
-            align: 'left',
-            wordWrap: { width: 160 },
-            backgroundColor: '#2a2a2a',
-            padding: { x: 10, y: 8 }
-        }).setOrigin(0, 0);
-
-        this.dialogueContainer.add(messageText);
-        this.dialogueTexts.push(messageText);
-
-        // Fade in animation
-        messageText.setAlpha(0);
-        this.tweens.add({
-            targets: messageText,
-            alpha: 1,
-            duration: 300
-        });
-
-        // Scroll up older messages if needed (when messages go beyond visible area)
-        const visibleHeight = 150; // Approximate visible height in dialogue area
-        if (yPos + messageText.height > visibleHeight) {
-            const scrollAmount = (yPos + messageText.height) - visibleHeight;
+        declineBtn.on('pointerover', () => {
             this.tweens.add({
-                targets: this.dialogueContainer,
-                y: this.dialogueContainer.y - scrollAmount,
-                duration: 300
+                targets: declineBtn,
+                scaleX: 1.1,
+                scaleY: 1.1,
+                duration: 100
             });
-        }
-
-        this.currentLine++;
-
-        // Auto-advance to next line
-        this.time.delayedCall(2500, () => {
-            this.showNextLine();
+        });
+        declineBtn.on('pointerout', () => {
+            this.tweens.add({
+                targets: declineBtn,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 100
+            });
         });
     }
 
-    endConversation() {
-        // Calculate time spent on call
-        const conversationDuration = (Date.now() - this.conversationStartTime) / 1000;
-        const timeSpent = Math.max(5, conversationDuration);
+    vibratePhone() {
+        // Subtle vibration effect
+        this.tweens.add({
+            targets: this.phoneContainer,
+            x: this.phoneContainer.x + 3,
+            duration: 50,
+            yoyo: true,
+            repeat: 5
+        });
 
+        // Repeat vibration
+        this.time.delayedCall(1500, () => {
+            if (this.scene.isActive()) {
+                this.vibratePhone();
+            }
+        });
+    }
+
+    answerCall() {
+        // Stop vibration
+        this.tweens.killTweensOf(this.phoneContainer);
+
+        // Phone stays visible, transition to conversation
+        this.scene.stop();
+        this.officeScene.answerCall(this.caller);
+    }
+
+    declineCall() {
         // Slide phone back down
         const { height } = this.cameras.main;
 
@@ -300,7 +318,7 @@ class ConversationScene extends Phaser.Scene {
             onComplete: () => {
                 this.scene.stop();
                 this.scene.resume('OfficeScene');
-                this.officeScene.returnFromConversation(timeSpent);
+                this.officeScene.ignoreCall(this.caller);
             }
         });
     }

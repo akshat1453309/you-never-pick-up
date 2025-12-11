@@ -7,20 +7,13 @@
 // Game configuration
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: window.innerWidth,
+    height: window.innerHeight,
     parent: 'game-container',
-    backgroundColor: '#000000',
-    scene: [GameScene],  // Register game scene
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 },  // Top-down game, no gravity
-            debug: false  // Set to true to see collision boxes
-        }
-    },
+    backgroundColor: '#0a0a0a',
+    scene: [OfficeScene, PhoneInterruptionScene, ConversationScene, EndOfDayScene, HeartAttackScene, RevealEndingScene],
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
     }
 };

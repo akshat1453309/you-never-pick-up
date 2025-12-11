@@ -1,8 +1,8 @@
 /**
- * PhoneScene - Main messaging interface
+ * PhoneScene - "You Never Pick Up"
  *
- * Shows incoming calls/messages as notifications
- * Player can click to enter conversations
+ * A phone conversation game about guilt, self-neglect, and isolation.
+ * All callers are aspects of yourself calling out to you.
  */
 
 class PhoneScene extends Phaser.Scene {
@@ -10,142 +10,230 @@ class PhoneScene extends Phaser.Scene {
         super({ key: 'PhoneScene' });
     }
 
-    init() {
-        // Track active conversations
-        this.activeConversations = [];
-        this.incomingCalls = [];
+    init(data) {
+        this.callNumber = data.callNumber || 1;
+        this.ignoredCalls = data.ignoredCalls || 0;
     }
 
     create() {
         const { width, height } = this.cameras.main;
 
-        // Background
-        this.add.rectangle(0, 0, width, height, 0x1a1a1a).setOrigin(0);
+        // Dark, isolating background
+        this.add.rectangle(0, 0, width, height, 0x1a1a2e).setOrigin(0);
 
-        // Title
-        this.add.text(width / 2, 40, 'Messages', {
+        // Get current caller data
+        const caller = this.getCallerData(this.callNumber);
+
+        // Phone display (like a phone screen)
+        const phoneX = width / 2;
+        const phoneY = height / 2;
+
+        // Phone screen background
+        this.add.rectangle(phoneX, phoneY, 400, 600, 0x0f0f1e)
+            .setStrokeStyle(4, 0x16213e);
+
+        // Caller info
+        this.add.text(phoneX, phoneY - 150, caller.name, {
             fontSize: '32px',
             fontFamily: 'Arial, sans-serif',
-            color: '#ffffff'
+            color: '#ffffff',
+            fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        // Subtitle
-        this.add.text(width / 2, 80, 'You have incoming messages...', {
-            fontSize: '16px',
+        this.add.text(phoneX, phoneY - 100, caller.label, {
+            fontSize: '18px',
             fontFamily: 'Arial, sans-serif',
             color: '#888888'
         }).setOrigin(0.5);
 
-        // Create incoming call notification for Mom
-        this.createIncomingCall('mom', 'Mom', 150);
+        // Ringing animation
+        this.ringText = this.add.text(phoneX, phoneY, 'Ringing...', {
+            fontSize: '24px',
+            fontFamily: 'Arial, sans-serif',
+            color: '#4a90e2'
+        }).setOrigin(0.5);
 
-        // Instructions
-        this.add.text(width / 2, height - 40, 'Click on a conversation to answer', {
+        this.tweens.add({
+            targets: this.ringText,
+            alpha: 0.3,
+            duration: 800,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Buttons
+        const buttonY = phoneY + 150;
+
+        // Answer button (green)
+        const answerButton = this.add.rectangle(phoneX - 80, buttonY, 140, 50, 0x2ecc71)
+            .setInteractive({ useHandCursor: true })
+            .setStrokeStyle(2, 0x27ae60);
+
+        this.add.text(phoneX - 80, buttonY, 'Answer', {
+            fontSize: '18px',
+            fontFamily: 'Arial, sans-serif',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        // Ignore button (red)
+        const ignoreButton = this.add.rectangle(phoneX + 80, buttonY, 140, 50, 0xe74c3c)
+            .setInteractive({ useHandCursor: true })
+            .setStrokeStyle(2, 0xc0392b);
+
+        this.add.text(phoneX + 80, buttonY, 'Ignore', {
+            fontSize: '18px',
+            fontFamily: 'Arial, sans-serif',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        // Stats at bottom
+        this.add.text(phoneX, height - 40, `Call ${this.callNumber} | Ignored: ${this.ignoredCalls}`, {
             fontSize: '14px',
             fontFamily: 'Arial, sans-serif',
             color: '#666666'
         }).setOrigin(0.5);
-    }
 
-    /**
-     * Create an incoming call notification
-     * @param {string} callerId - Unique identifier for caller
-     * @param {string} callerName - Display name
-     * @param {number} yPosition - Y position for the notification
-     */
-    createIncomingCall(callerId, callerName, yPosition) {
-        const { width } = this.cameras.main;
-        const centerX = width / 2;
+        // Button interactions
+        answerButton.on('pointerdown', () => {
+            this.answerCall(caller);
+        });
 
-        // Notification container
-        const notificationBg = this.add.rectangle(centerX, yPosition, 600, 100, 0x2a2a2a)
-            .setInteractive({ useHandCursor: true });
-
-        // Border/highlight
-        const border = this.add.rectangle(centerX, yPosition, 604, 104, 0x4a4a4a);
-        border.setStrokeStyle(2, 0x666666);
-        border.setDepth(-1);
-
-        // Profile circle (placeholder for profile image)
-        const profileCircle = this.add.circle(centerX - 220, yPosition, 30, 0x4a90e2);
-
-        // Initial of caller
-        const initial = this.add.text(centerX - 220, yPosition, callerName[0], {
-            fontSize: '24px',
-            fontFamily: 'Arial, sans-serif',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Caller name
-        const nameText = this.add.text(centerX - 170, yPosition - 20, callerName, {
-            fontSize: '20px',
-            fontFamily: 'Arial, sans-serif',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0, 0.5);
-
-        // Incoming message preview
-        const messagePreview = this.add.text(centerX - 170, yPosition + 10, 'Incoming call...', {
-            fontSize: '14px',
-            fontFamily: 'Arial, sans-serif',
-            color: '#888888'
-        }).setOrigin(0, 0.5);
-
-        // Answer button
-        const answerButton = this.add.rectangle(centerX + 200, yPosition, 100, 40, 0x4a90e2)
-            .setInteractive({ useHandCursor: true });
-
-        const answerText = this.add.text(centerX + 200, yPosition, 'Answer', {
-            fontSize: '16px',
-            fontFamily: 'Arial, sans-serif',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        ignoreButton.on('pointerdown', () => {
+            this.ignoreCall(caller);
+        });
 
         // Hover effects
-        answerButton.on('pointerover', () => {
-            answerButton.setFillStyle(0x5aa0f2);
-        });
+        answerButton.on('pointerover', () => answerButton.setFillStyle(0x27ae60));
+        answerButton.on('pointerout', () => answerButton.setFillStyle(0x2ecc71));
 
-        answerButton.on('pointerout', () => {
-            answerButton.setFillStyle(0x4a90e2);
-        });
+        ignoreButton.on('pointerover', () => ignoreButton.setFillStyle(0xc0392b));
+        ignoreButton.on('pointerout', () => ignoreButton.setFillStyle(0xe74c3c));
+    }
 
-        // Click to answer
-        answerButton.on('pointerdown', () => {
-            this.answerCall(callerId, callerName);
-        });
+    getCallerData(callNumber) {
+        const callers = [
+            {
+                name: 'Inner Voice',
+                label: 'The part of you that knows',
+                dialogue: [
+                    { speaker: 'Inner Voice', text: 'Hey... it\'s me. You know, the part of you that knows you\'re not okay.' },
+                    { speaker: 'Inner Voice', text: 'I\'ve been trying to reach you for weeks now.' },
+                    { speaker: 'Inner Voice', text: 'You can\'t keep ignoring this. Ignoring me. Ignoring yourself.' }
+                ]
+            },
+            {
+                name: 'Hope',
+                label: 'The part of you that still believes',
+                dialogue: [
+                    { speaker: 'Hope', text: 'I know you\'re there. I know you can hear me.' },
+                    { speaker: 'Hope', text: 'Things can get better. They really can.' },
+                    { speaker: 'Hope', text: 'But you have to let me in. You have to want to feel better.' }
+                ]
+            },
+            {
+                name: 'Fear',
+                label: 'The part of you that\'s scared',
+                dialogue: [
+                    { speaker: 'Fear', text: 'What if you never get better?' },
+                    { speaker: 'Fear', text: 'What if everyone finds out how much you\'re struggling?' },
+                    { speaker: 'Fear', text: 'What if asking for help makes it worse?' }
+                ]
+            },
+            {
+                name: 'Self-Care',
+                label: 'The part of you that wants to heal',
+                dialogue: [
+                    { speaker: 'Self-Care', text: 'You haven\'t eaten properly in days.' },
+                    { speaker: 'Self-Care', text: 'When was the last time you did something just because it made you feel good?' },
+                    { speaker: 'Self-Care', text: 'You deserve to take care of yourself. Please.' }
+                ]
+            },
+            {
+                name: 'Guilt',
+                label: 'The part of you that remembers',
+                dialogue: [
+                    { speaker: 'Guilt', text: 'You said you\'d call mom back. You didn\'t.' },
+                    { speaker: 'Guilt', text: 'Your friends keep asking if you\'re okay. You keep lying.' },
+                    { speaker: 'Guilt', text: 'How long can you keep this up?' }
+                ]
+            },
+            {
+                name: 'Truth',
+                label: 'The part of you that sees clearly',
+                dialogue: [
+                    { speaker: 'Truth', text: 'This is the last call.' },
+                    { speaker: 'Truth', text: 'You\'ve been running from yourself for so long.' },
+                    { speaker: 'Truth', text: 'The only person you\'re really ignoring... is you.' }
+                ]
+            }
+        ];
 
-        // Also allow clicking the whole notification to answer
-        notificationBg.on('pointerdown', () => {
-            this.answerCall(callerId, callerName);
-        });
+        return callers[Math.min(callNumber - 1, callers.length - 1)];
+    }
 
-        // Pulse animation for incoming call
-        this.tweens.add({
-            targets: [notificationBg, border],
-            alpha: 0.8,
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
+    answerCall(caller) {
+        this.cameras.main.fade(300, 0, 0, 0);
+        this.time.delayedCall(300, () => {
+            this.scene.start('ConversationScene', {
+                caller: caller,
+                callNumber: this.callNumber,
+                ignoredCalls: this.ignoredCalls
+            });
         });
     }
 
-    /**
-     * Answer a call and transition to conversation
-     * @param {string} callerId - Unique identifier for caller
-     * @param {string} callerName - Display name
-     */
-    answerCall(callerId, callerName) {
-        // Stop all tweens
-        this.tweens.killAll();
+    ignoreCall(caller) {
+        // Visual feedback
+        this.cameras.main.flash(200, 100, 0, 0);
 
-        // Transition to conversation scene
-        this.scene.start('ConversationScene', {
-            callerId: callerId,
-            callerName: callerName
+        // Show consequence text
+        const consequenceTexts = [
+            'It\'s easier not to answer.',
+            'You tell yourself you\'ll deal with it later.',
+            'The silence is comforting. And terrifying.',
+            'Another call ignored.',
+            'You feel the weight of it.',
+            'How many more can you ignore?'
+        ];
+
+        const text = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 100,
+            consequenceTexts[Math.min(this.ignoredCalls, consequenceTexts.length - 1)], {
+            fontSize: '16px',
+            fontFamily: 'Arial, sans-serif',
+            color: '#e74c3c',
+            align: 'center'
+        }).setOrigin(0.5).setAlpha(0);
+
+        this.tweens.add({
+            targets: text,
+            alpha: 1,
+            duration: 500,
+            hold: 1500,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => {
+                this.nextCall(true);
+            }
         });
+    }
+
+    nextCall(wasIgnored) {
+        const nextCallNumber = this.callNumber + 1;
+        const newIgnoredCount = wasIgnored ? this.ignoredCalls + 1 : this.ignoredCalls;
+
+        if (nextCallNumber > 6) {
+            // Game over
+            this.scene.start('EndingScene', { ignoredCalls: newIgnoredCount });
+        } else {
+            this.cameras.main.fade(500, 0, 0, 0);
+            this.time.delayedCall(500, () => {
+                this.scene.restart({
+                    callNumber: nextCallNumber,
+                    ignoredCalls: newIgnoredCount
+                });
+            });
+        }
     }
 }

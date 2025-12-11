@@ -1,7 +1,7 @@
 /**
- * EndingScene - Final message and reflection
+ * EndingScene - Final message about self-care and reaching out
  *
- * Shows after Phase 5, delivers the core message about asking for help
+ * Different messages based on how many calls you ignored
  */
 
 class EndingScene extends Phaser.Scene {
@@ -10,7 +10,7 @@ class EndingScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.guiltLevel = data.guiltLevel || 0;
+        this.ignoredCalls = data.ignoredCalls || 0;
     }
 
     create() {
@@ -29,70 +29,62 @@ class EndingScene extends Phaser.Scene {
     }
 
     showMessage() {
-        const { width, height } = this.cameras.main;
+        const { width, height} = this.cameras.main;
 
-        const messages = [
-            {
-                text: 'You spent weeks saying "I\'m fine."',
-                delay: 0
-            },
-            {
-                text: 'You weren\'t fine.',
-                delay: 2000
-            },
-            {
-                text: 'Everyone who asked knew that.',
-                delay: 4000
-            },
-            {
-                text: 'They were giving you permission to be honest.',
-                delay: 6000
-            },
-            {
-                text: 'You didn\'t take it.',
-                delay: 8000
-            },
-            {
-                text: '',
-                delay: 10000
-            },
-            {
-                text: 'It\'s not weakness to struggle.',
-                delay: 11000
-            },
-            {
-                text: 'It\'s not failure to ask for help.',
-                delay: 13000
-            },
-            {
-                text: 'It\'s not giving up to admit you\'re drowning.',
-                delay: 15000
-            },
-            {
-                text: '',
-                delay: 17000
-            },
-            {
-                text: 'The people who care about you don\'t want "I\'m fine."',
-                delay: 18000
-            },
-            {
-                text: 'They want the truth.',
-                delay: 20000
-            },
-            {
-                text: 'Even if the truth is "I\'m not okay."',
-                delay: 22000
-            },
-            {
-                text: '',
-                delay: 24000
-            },
-            {
-                text: 'Especially then.',
-                delay: 25000
-            }
-        ];
+        let messages;
+
+        if (this.ignoredCalls >= 4) {
+            // Ignored most calls
+            messages = [
+                { text: 'You ignored most of the calls.', delay: 0 },
+                { text: 'It\'s easier that way, isn\'t it?', delay: 2000 },
+                { text: '', delay: 4000 },
+                { text: 'But those weren\'t strangers calling.', delay: 5000 },
+                { text: 'They were parts of you.', delay: 7000 },
+                { text: 'Trying to reach you.', delay: 9000 },
+                { text: '', delay: 11000 },
+                { text: 'When you ignore yourself...', delay: 12000 },
+                { text: 'Who\'s left to answer?', delay: 14000 }
+            ];
+        } else if (this.ignoredCalls >= 2) {
+            // Ignored some calls
+            messages = [
+                { text: 'You answered some of the calls.', delay: 0 },
+                { text: 'But not all of them.', delay: 2000 },
+                { text: '', delay: 4000 },
+                { text: 'Some parts of yourself...', delay: 5000 },
+                { text: 'You still keep at arm\'s length.', delay: 7000 },
+                { text: '', delay: 9000 },
+                { text: 'That\'s okay.', delay: 10000 },
+                { text: 'Listening is hard.', delay: 12000 },
+                { text: 'But you\'re trying.', delay: 14000 }
+            ];
+        } else {
+            // Answered all calls
+            messages = [
+                { text: 'You answered every call.', delay: 0 },
+                { text: 'Even the hard ones.', delay: 2000 },
+                { text: '', delay: 4000 },
+                { text: 'You listened to every part of yourself.', delay: 5000 },
+                { text: 'The fear. The hope. The guilt.', delay: 7000 },
+                { text: 'All of it.', delay: 9000 },
+                { text: '', delay: 11000 },
+                { text: 'That takes courage.', delay: 12000 }
+            ];
+        }
+
+        // Common ending message
+        messages.push(
+            { text: '', delay: 16000 },
+            { text: 'You are all these voices.', delay: 17000 },
+            { text: 'The scared one. The hopeful one.', delay: 19000 },
+            { text: 'The one that wants to heal.', delay: 21000 },
+            { text: '', delay: 23000 },
+            { text: 'You don\'t have to pick up every call.', delay: 24000 },
+            { text: 'But you have to listen to yourself.', delay: 26000 },
+            { text: '', delay: 28000 },
+            { text: 'You deserve that.', delay: 29000 }
+        );
 
         let yOffset = height / 2 - 150;
 

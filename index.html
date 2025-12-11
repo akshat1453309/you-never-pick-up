@@ -3,29 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo in the Dark</title>
+    <title>You Never Pick Up</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             background: #0a0a0a;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
         #game-container {
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            width: 100vw;
+            height: 100vh;
+        }
+        #game-container canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
         }
     </style>
 </head>
 <body>
     <div id="game-container"></div>
 
-    <!-- Load game scene -->
-    <script src="js/scenes/GameScene.js"></script>
+    <!-- Load game scenes -->
+    <script src="js/scenes/OfficeScene.js"></script>
+    <script src="js/scenes/PhoneInterruptionScene.js"></script>
+    <script src="js/scenes/ConversationScene.js"></script>
+    <script src="js/scenes/EndOfDayScene.js"></script>
+    <script src="js/scenes/HeartAttackScene.js"></script>
+    <script src="js/scenes/RevealEndingScene.js"></script>
 
     <!-- Load main game config last -->
     <script src="js/main.js"></script>
