@@ -75,6 +75,31 @@ class OfficeScene extends Phaser.Scene {
             console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
         });
 
+        // DEBUG: Press '7' to travel directly to shop
+        this.input.keyboard.on('keydown-SEVEN', () => {
+            console.log('DEBUG: Traveling to shop scene');
+            // Clean up before transition
+            if (this.timerEvent) this.timerEvent.remove();
+            if (this.healthDrainEvent) this.healthDrainEvent.remove();
+            this.input.keyboard.off('keydown', this.handleKeyPress, this);
+
+            // Jump to shop
+            this.scene.start('EndOfDayScene', {
+                workDay: this.workDay || 1,
+                money: this.money || 100,
+                ignoredCalls: this.ignoredCalls || 0,
+                totalCalls: this.totalCalls || 0,
+                health: this.health || 75,
+                usedDocuments: this.usedDocuments || []
+            });
+        });
+
+        // DEBUG: Press '8' to trigger Mom's call instantly
+        this.input.keyboard.on('keydown-EIGHT', () => {
+            console.log('DEBUG: Triggering Mom\'s call instantly');
+            this.triggerPhoneCall();
+        });
+
         // Show notification after fade in completes
         this.time.delayedCall(2000, () => {
             this.showBossNotification();

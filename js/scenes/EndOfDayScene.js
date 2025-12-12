@@ -14,10 +14,14 @@ class EndOfDayScene extends Phaser.Scene {
         this.load.image('shop_bg', 'assets/images/shop_background.png');
 
         // Load shop item images
+<<<<<<< Updated upstream
         this.load.image('cigerette_box', 'assets/shop/cigerette_box.png');
         // Add more shop items here as needed
         // this.load.image('utilities_item', 'assets/shop/utilities_item.png');
         // this.load.image('medicine_item', 'assets/shop/medicine_item.png');
+=======
+        this.load.image('cigarette_box', 'assets/images/cigarette_box.png');
+>>>>>>> Stashed changes
     }
 
     init(data) {
@@ -166,6 +170,7 @@ class EndOfDayScene extends Phaser.Scene {
                     .setStrokeStyle(3, 0x4a90e2);
             }
 
+<<<<<<< Updated upstream
             // Item label below the image
             const labelText = this.add.text(x, y + 100, item.label || item.name, {
                 fontSize: '18px',
@@ -235,6 +240,83 @@ class EndOfDayScene extends Phaser.Scene {
             itemSprite.on('pointerover', itemSprite._hoverEnterHandler);
             itemSprite.on('pointerout', itemSprite._hoverExitHandler);
 
+=======
+            // Show cigarette box sprite for Food item instead of rectangle
+            if (item.name === 'Food' && this.textures.exists('cigarette_box')) {
+                // Large cigarette box as the main item display
+                const sprite = this.add.image(x, y - 20, 'cigarette_box')
+                    .setOrigin(0.5)
+                    .setDisplaySize(150, 150)
+                    .setInteractive({ useHandCursor: true });
+
+                // Create yellow outline (initially invisible)
+                const outline = this.add.rectangle(x, y - 20, 154, 154)
+                    .setStrokeStyle(4, 0xffff00)
+                    .setFillStyle(0x000000, 0) // Transparent fill
+                    .setAlpha(0);
+
+                // Hover effects
+                sprite.on('pointerover', () => {
+                    outline.setAlpha(1);
+                });
+
+                sprite.on('pointerout', () => {
+                    outline.setAlpha(0);
+                });
+
+                // Purchase on click
+                sprite.on('pointerdown', () => {
+                    this.purchaseItem(item, null, null);
+                });
+            } else {
+                // Item box for other items (Utilities, Medicine)
+                const box = this.add.rectangle(x, y, 200, 180, 0x1a1a2e)
+                    .setStrokeStyle(2, 0x4a90e2);
+
+                // Item name
+                this.add.text(x, y - 95, item.name, {
+                    fontSize: '20px',
+                    fontFamily: 'Arial, sans-serif',
+                    color: '#ffffff',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // Description
+                this.add.text(x, y - 20, item.description, {
+                    fontSize: '14px',
+                    fontFamily: 'Arial, sans-serif',
+                    color: '#888888',
+                    align: 'center',
+                    lineSpacing: 5
+                }).setOrigin(0.5);
+
+                // Cost
+                this.add.text(x, y + 35, `$${item.cost}`, {
+                    fontSize: '18px',
+                    fontFamily: 'Arial, sans-serif',
+                    color: '#4a90e2'
+                }).setOrigin(0.5);
+
+                // Buy button
+                const button = this.add.rectangle(x, y + 70, 120, 35, 0x2ecc71)
+                    .setInteractive({ useHandCursor: true })
+                    .setStrokeStyle(2, 0x27ae60);
+
+                const buttonText = this.add.text(x, y + 70, 'Buy', {
+                    fontSize: '16px',
+                    fontFamily: 'Arial, sans-serif',
+                    color: '#ffffff',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                button.on('pointerdown', () => {
+                    this.purchaseItem(item, button, buttonText);
+                });
+
+                button.on('pointerover', () => button.setFillStyle(0x27ae60));
+                button.on('pointerout', () => button.setFillStyle(0x2ecc71));
+            }
+>>>>>>> Stashed changes
         });
     }
 
