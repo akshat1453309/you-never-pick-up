@@ -14,10 +14,18 @@ class EndOfDayScene extends Phaser.Scene {
         this.load.image('shop_bg', 'assets/images/shop_background.png');
 
         // Load shop item images
-        this.load.image('cigerette_box', 'assets/shop/cigerette_box.png');
-        // Add more shop items here as needed
-        // this.load.image('utilities_item', 'assets/shop/utilities_item.png');
-        // this.load.image('medicine_item', 'assets/shop/medicine_item.png');
+        this.load.image('cigarette_box', 'assets/shop/Cigarette_box.png');
+        this.load.image('ale', 'assets/shop/Ale.png');
+
+        // Load shop background music (optional - won't break game if missing)
+        this.load.audio('shop_music', 'assets/sounds/shop_theme.mp3');
+
+        // Handle audio loading errors
+        this.load.on('loaderror', (file) => {
+            if (file.key === 'shop_music') {
+                console.log('Shop music not found - game will continue without music');
+            }
+        });
     }
 
     init(data) {
@@ -39,21 +47,30 @@ class EndOfDayScene extends Phaser.Scene {
         // Set background color
         this.cameras.main.setBackgroundColor('#0a0a0a');
 
-        // Shop background image - Cover entire screen
+        // Shop background image - Stretch to fill entire screen
         if (this.textures.exists('shop_bg')) {
             this.background = this.add.image(width / 2, height / 2, 'shop_bg')
-                .setDepth(0);
-
-            // Calculate scale to cover entire screen (no black borders)
-            const scaleX = width / this.background.width;
-            const scaleY = height / this.background.height;
-            const scale = Math.max(scaleX, scaleY);
-
-            // Apply scale to cover entire screen
-            this.background.setScale(scale);
+                .setDepth(0)
+                .setDisplaySize(width, height); // Stretch to fill screen (no black borders, no cropping)
         } else {
             // Fallback to solid color if image doesn't load
             this.add.rectangle(0, 0, width, height, 0x0a0a0a).setOrigin(0);
+        }
+
+        // Play shop background music (looping) - with error handling
+        try {
+            if (this.cache.audio.exists('shop_music')) {
+                this.shopMusic = this.sound.add('shop_music', {
+                    loop: true,
+                    volume: 0.5
+                });
+                this.shopMusic.play();
+                console.log('Shop music playing');
+            } else {
+                console.log('Shop music not loaded - continuing without music');
+            }
+        } catch (error) {
+            console.log('Could not play shop music:', error.message);
         }
 
         // Title - Top left
@@ -110,55 +127,78 @@ class EndOfDayScene extends Phaser.Scene {
             console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
         });
         this.input.topOnly = false; // Allow click to pass through to debug handler
+
+        // Add resize listener for responsive layout
+        this.scale.on('resize', this.handleResize, this);
     }
 
     createShopItems() {
         const { width, height } = this.cameras.main;
 
-        // Fixed prices and positions
+        // Responsive positioning using percentages of screen size
+        // Based on coordinates: Cigarettes (337, 582), Ale (1500, 537) on 1920x1080 screen
         this.shopItems = [
             {
                 name: 'Cigarettes',
                 cost: 30,
                 healthRestore: 25,
                 description: 'A smoke break',
-                texture: 'cigerette_box',
+                texture: 'cigarette_box',
                 label: 'Cigarettes',
-                x: 429,
-                y: 807
+                xPercent: 337 / 1920,  // ~18% from left (337px at 1920px width)
+                yPercent: 582 / 1080   // ~54% from top (582px at 1080px height)
             },
             {
-                name: 'Utilities',
-                cost: 50,
-                healthRestore: 15,
-                description: 'Pay bills, reduce stress',
-                texture: null,
-                label: 'Utilities',
-                x: 97,
-                y: 822
-            },
-            {
-                name: 'Medicine',
+                name: 'Ale',
                 cost: 40,
                 healthRestore: 30,
-                description: 'Treat your symptoms',
-                texture: null,
-                label: 'Medicine',
-                x: 1528,
-                y: 824
+                description: 'Drown your sorrows',
+                texture: 'ale',
+                label: 'Ale',
+                xPercent: 1500 / 1920,  // ~78% from left (1500px at 1920px width)
+                yPercent: 537 / 1080   // ~50% from top (537px at 1080px height)
             }
         ];
 
+        // Store sprite/label references for resize
+        this.itemSprites = [];
+        this.itemLabels = [];
+
+        this.renderShopItems();
+    }
+
+    renderShopItems() {
+        const { width, height } = this.cameras.main;
+
+        // Clear existing items if re-rendering
+        if (this.itemSprites && this.itemSprites.length > 0) {
+            this.itemSprites.forEach(sprite => {
+                if (sprite && !sprite.scene) return; // Already destroyed
+                if (sprite) sprite.destroy();
+            });
+            this.itemLabels.forEach(label => {
+                if (label && !label.scene) return; // Already destroyed
+                if (label) label.destroy();
+            });
+            this.itemSprites = [];
+            this.itemLabels = [];
+        }
+
         this.shopItems.forEach((item, index) => {
-            const x = item.x;
-            const y = item.y;
+            const x = width * item.xPercent;
+            const y = height * item.yPercent;
 
             // Create image or placeholder for item
             let itemSprite;
+            let spriteHeight = 150; // Default height for placeholder
+
             if (item.texture && this.textures.exists(item.texture)) {
                 itemSprite = this.add.image(x, y, item.texture)
                     .setInteractive({ useHandCursor: true })
                     .setScale(0.5); // Scale down the image
+
+                // Get actual display height after scaling
+                spriteHeight = itemSprite.displayHeight;
             } else {
                 // Fallback to blue box if no texture
                 itemSprite = this.add.rectangle(x, y, 150, 150, 0x3366ff)
@@ -166,8 +206,9 @@ class EndOfDayScene extends Phaser.Scene {
                     .setStrokeStyle(3, 0x4a90e2);
             }
 
-            // Item label below the image
-            const labelText = this.add.text(x, y + 100, item.label || item.name, {
+            // Item label below the image (half of sprite height + padding)
+            const labelY = y + (spriteHeight / 2) + 15;
+            const labelText = this.add.text(x, labelY, item.label || item.name, {
                 fontSize: '18px',
                 fontFamily: 'Arial, sans-serif',
                 color: '#ffffff',
@@ -235,6 +276,9 @@ class EndOfDayScene extends Phaser.Scene {
             itemSprite.on('pointerover', itemSprite._hoverEnterHandler);
             itemSprite.on('pointerout', itemSprite._hoverExitHandler);
 
+            // Store references for resize
+            this.itemSprites.push(itemSprite);
+            this.itemLabels.push(labelText);
         });
     }
 
@@ -476,6 +520,12 @@ class EndOfDayScene extends Phaser.Scene {
         console.log('Money:', this.money);
         console.log('Next Day:', nextDay);
 
+        // Stop shop music before transitioning
+        if (this.shopMusic) {
+            this.shopMusic.stop();
+            console.log('Shop music stopped - transitioning to next scene');
+        }
+
         if (nextDay > 7) {
             // Survived 7 days - trigger ending
             console.log('Player survived 7 days - triggering ending');
@@ -506,5 +556,41 @@ class EndOfDayScene extends Phaser.Scene {
         if (health > 70) return '#00ff00';
         if (health > 40) return '#ff9900';
         return '#ff0000';
+    }
+
+    handleResize(gameSize) {
+        const { width, height } = gameSize;
+
+        // Update background to stretch to fill entire screen
+        if (this.background) {
+            this.background.setDisplaySize(width, height);
+            this.background.setPosition(width / 2, height / 2);
+        }
+
+        // Update UI text positions
+        if (this.moneyText) {
+            this.moneyText.setPosition(width - 30, 30);
+        }
+        if (this.healthDisplayText) {
+            this.healthDisplayText.setPosition(width - 30, 85);
+        }
+        if (this.warningText) {
+            this.warningText.setPosition(width / 2, height - 70);
+        }
+
+        // Re-render shop items at new positions
+        if (this.shopItems && this.shopItems.length > 0) {
+            this.renderShopItems();
+        }
+    }
+
+    shutdown() {
+        // Stop shop background music
+        if (this.shopMusic) {
+            this.shopMusic.stop();
+        }
+
+        // Remove resize listener when scene shuts down
+        this.scale.off('resize', this.handleResize, this);
     }
 }

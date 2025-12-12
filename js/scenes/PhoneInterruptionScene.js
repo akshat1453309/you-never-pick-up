@@ -59,6 +59,22 @@ class PhoneInterruptionScene extends Phaser.Scene {
             ease: 'Back.easeOut'
         });
 
+        // Play phone ringtone (looping) - with error handling
+        try {
+            if (this.cache.audio.exists('phone_ring')) {
+                this.phoneRing = this.sound.add('phone_ring', {
+                    loop: true,
+                    volume: 1.0  // Full volume for ringtone
+                });
+                this.phoneRing.play();
+                console.log('Phone ringing');
+            } else {
+                console.log('Phone ring not loaded - continuing without ringtone');
+            }
+        } catch (error) {
+            console.log('Could not play phone ringtone:', error.message);
+        }
+
         // Add phone screen content
         this.createPhoneScreen(phoneWidth, phoneHeight);
 
@@ -339,12 +355,22 @@ class PhoneInterruptionScene extends Phaser.Scene {
         // Stop vibration
         this.tweens.killTweensOf(this.phoneContainer);
 
+        // Stop phone ringtone
+        if (this.phoneRing) {
+            this.phoneRing.stop();
+        }
+
         // Phone stays visible, transition to conversation
         this.scene.stop();
         this.officeScene.answerCall(this.caller);
     }
 
     declineCall() {
+        // Stop phone ringtone
+        if (this.phoneRing) {
+            this.phoneRing.stop();
+        }
+
         // Slide phone back down
         const { height } = this.cameras.main;
 

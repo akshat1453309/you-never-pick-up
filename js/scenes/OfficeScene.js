@@ -15,6 +15,22 @@ class OfficeScene extends Phaser.Scene {
 
         // Load profile pictures for all characters
         this.load.image('profile_mom', 'assets/characters/mom.png');
+
+        // Load office background music (optional - won't break game if missing)
+        this.load.audio('office_music', 'assets/sounds/office_theme.mp3');
+
+        // Load phone ringtone (optional - won't break game if missing)
+        this.load.audio('phone_ring', 'assets/sounds/phone_ring.mp3');
+
+        // Handle audio loading errors
+        this.load.on('loaderror', (file) => {
+            if (file.key === 'office_music') {
+                console.log('Office music not found - game will continue without music');
+            }
+            if (file.key === 'phone_ring') {
+                console.log('Phone ring not found - game will continue without ringtone');
+            }
+        });
     }
 
     init(data) {
@@ -47,6 +63,22 @@ class OfficeScene extends Phaser.Scene {
         // Fade in from black
         this.cameras.main.fadeIn(1500, 0, 0, 0);
 
+        // Play office background music (looping) - with error handling
+        try {
+            if (this.cache.audio.exists('office_music')) {
+                this.officeMusic = this.sound.add('office_music', {
+                    loop: true,
+                    volume: 0.5
+                });
+                this.officeMusic.play();
+                console.log('Office music playing');
+            } else {
+                console.log('Office music not loaded - continuing without music');
+            }
+        } catch (error) {
+            console.log('Could not play office music:', error.message);
+        }
+
         // Get current document
         this.currentDocument = this.getDocument();
         this.typedText = '';
@@ -73,6 +105,25 @@ class OfficeScene extends Phaser.Scene {
             if (!window.debugCoordMode) return;
             this.add.circle(pointer.x, pointer.y, 5, 0x00ff00).setDepth(9999);
             console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
+        });
+
+        // DEBUG: Press '8' to jump directly to shop
+        this.input.keyboard.on('keydown-EIGHT', () => {
+            console.log('DEBUG: Jumping to shop scene');
+            // Clean up before transition
+            if (this.timerEvent) this.timerEvent.remove();
+            if (this.healthDrainEvent) this.healthDrainEvent.remove();
+            this.input.keyboard.off('keydown', this.handleKeyPress, this);
+
+            // Jump to shop
+            this.scene.start('EndOfDayScene', {
+                workDay: this.workDay || 1,
+                money: this.money || 100,
+                ignoredCalls: this.ignoredCalls || 0,
+                totalCalls: this.totalCalls || 0,
+                health: this.health || 75,
+                usedDocuments: this.usedDocuments || []
+            });
         });
 
         // Show notification after fade in completes
@@ -1003,6 +1054,12 @@ class OfficeScene extends Phaser.Scene {
         if (this.healthDrainEvent) this.healthDrainEvent.remove();
         this.input.keyboard.off('keydown', this.handleKeyPress, this);
 
+        // Stop office music before transitioning
+        if (this.officeMusic) {
+            this.officeMusic.stop();
+            console.log('Office music stopped - transitioning to shop');
+        }
+
         // Hide timer
         if (this.timerContainer) {
             this.timerContainer.setVisible(false);
@@ -1173,6 +1230,12 @@ class OfficeScene extends Phaser.Scene {
         if (this.healthDrainEvent) this.healthDrainEvent.remove();
         this.input.keyboard.off('keydown', this.handleKeyPress, this);
 
+        // Stop office music before transitioning
+        if (this.officeMusic) {
+            this.officeMusic.stop();
+            console.log('Office music stopped - transitioning to heart attack scene');
+        }
+
         // CRITICAL: Kill all tweens to prevent callback errors during scene transition
         this.tweens.killAll();
 
@@ -1305,6 +1368,11 @@ class OfficeScene extends Phaser.Scene {
     }
 
     shutdown() {
+        // Stop office background music
+        if (this.officeMusic) {
+            this.officeMusic.stop();
+        }
+
         // Remove resize event listener to prevent null reference errors in other scenes
         this.scale.off('resize', this.handleResize, this);
 

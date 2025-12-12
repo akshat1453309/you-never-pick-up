@@ -17,6 +17,10 @@ class HeartAttackScene extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
+        // Stop ALL audio when entering death scene
+        this.sound.stopAll();
+        console.log('All music stopped - entering heart attack scene');
+
         // DEBUG: Click to place green dot (uses global window.debugCoordMode)
         this.input.on('pointerdown', (pointer) => {
             if (!window.debugCoordMode) return;
