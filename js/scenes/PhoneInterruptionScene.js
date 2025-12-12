@@ -381,7 +381,7 @@ class PhoneInterruptionScene extends Phaser.Scene {
             ease: 'Back.easeIn',
             onComplete: () => {
                 this.scene.stop();
-                this.scene.resume('OfficeScene');
+                // OfficeScene was never paused, so no need to resume
                 this.officeScene.ignoreCall(this.caller);
             }
         });
