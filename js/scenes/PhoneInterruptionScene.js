@@ -14,6 +14,17 @@ class PhoneInterruptionScene extends Phaser.Scene {
         this.officeScene = data.officeScene;
     }
 
+    getProfileKey(callerName) {
+        const mapping = {
+            'Mom': 'profile_mom',
+            'Sarah': 'profile_sarah',
+            'Professor Chen': 'profile_professor_chen',
+            'Emma': 'profile_emma',
+            'Marcus': 'profile_marcus'
+        };
+        return mapping[callerName] || null;
+    }
+
     create() {
         const { width, height } = this.cameras.main;
 
@@ -148,19 +159,39 @@ class PhoneInterruptionScene extends Phaser.Scene {
         }).setOrigin(0.5);
         this.phoneContainer.add(timeText);
 
-        // Caller photo circle (generic avatar)
-        const callerPhoto = this.add.circle(0, screenY - 60, 40, 0x4a90e2);
-        this.phoneContainer.add(callerPhoto);
+        // Get profile picture key
+        const profileKey = this.getProfileKey(this.caller.name);
+        console.log('[PhoneInterruptionScene] Caller:', this.caller.name);
+        console.log('[PhoneInterruptionScene] Profile key:', profileKey);
+        console.log('[PhoneInterruptionScene] Texture exists:', profileKey ? this.textures.exists(profileKey) : 'N/A');
 
-        // Caller initials
-        const initials = this.caller.name.split(' ').map(n => n[0]).join('');
-        const initialsText = this.add.text(0, screenY - 60, initials, {
-            fontSize: '24px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.phoneContainer.add(initialsText);
+        if (profileKey && this.textures.exists(profileKey)) {
+            console.log('[PhoneInterruptionScene] ✅ Showing profile picture for', this.caller.name);
+
+            // Show actual profile picture (without mask for now - white screen helps hide checkered bg)
+            const profilePic = this.add.image(0, screenY - 60, profileKey)
+                .setOrigin(0.5)
+                .setDisplaySize(80, 80); // Circle diameter = 80 (radius 40)
+
+            this.phoneContainer.add(profilePic);
+
+            console.log('[PhoneInterruptionScene] Profile pic added at:', profilePic.x, profilePic.y);
+            console.log('[PhoneInterruptionScene] Profile pic size:', profilePic.displayWidth, 'x', profilePic.displayHeight);
+        } else {
+            console.log('[PhoneInterruptionScene] ⚠️ Falling back to initials for', this.caller.name);
+            // Fallback to generic circle with initials if no profile picture
+            const callerPhoto = this.add.circle(0, screenY - 60, 40, 0x4a90e2);
+            this.phoneContainer.add(callerPhoto);
+
+            const initials = this.caller.name.split(' ').map(n => n[0]).join('');
+            const initialsText = this.add.text(0, screenY - 60, initials, {
+                fontSize: '24px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
+                color: '#ffffff', // Keep white for the blue circle background
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            this.phoneContainer.add(initialsText);
+        }
 
         // Caller name
         const nameText = this.add.text(0, screenY, this.caller.name, {

@@ -12,6 +12,24 @@ class OfficeScene extends Phaser.Scene {
     preload() {
         // Load office desk background
         this.load.image('office_desk', 'assets/images/office_desk_rough.png');
+
+        // Load profile pictures for all characters (used in PhoneInterruptionScene and RevealEndingScene)
+        console.log('[OfficeScene] Loading profile pictures...');
+        this.load.image('profile_mom', 'assets/characters/mom.png');
+        // TODO: Load other character profiles when ready
+        // this.load.image('profile_sarah', 'assets/characters/sarah.png');
+        // this.load.image('profile_professor_chen', 'assets/characters/professor_chen.png');
+        // this.load.image('profile_emma', 'assets/characters/emma.png');
+        // this.load.image('profile_marcus', 'assets/characters/marcus.png');
+
+        // Listen for load errors
+        this.load.on('loaderror', (file) => {
+            console.error('[OfficeScene] ❌ Failed to load:', file.key, file.src);
+        });
+
+        this.load.on('complete', () => {
+            console.log('[OfficeScene] ✅ All assets loaded');
+        });
     }
 
     init(data) {
@@ -75,6 +93,31 @@ class OfficeScene extends Phaser.Scene {
             console.log('DEBUG: Setting health to 5%');
             this.health = 5;
             this.updateHealthVisualization();
+        });
+
+        // DEBUG: Press '7' to travel directly to shop
+        this.input.keyboard.on('keydown-SEVEN', () => {
+            console.log('DEBUG: Traveling to shop scene');
+            // Clean up before transition
+            if (this.timerEvent) this.timerEvent.remove();
+            if (this.healthDrainEvent) this.healthDrainEvent.remove();
+            this.input.keyboard.off('keydown', this.handleKeyPress, this);
+
+            // Jump to shop
+            this.scene.start('EndOfDayScene', {
+                workDay: this.workDay || 1,
+                money: this.money || 100,
+                ignoredCalls: this.ignoredCalls || 0,
+                totalCalls: this.totalCalls || 0,
+                health: this.health || 75,
+                usedDocuments: this.usedDocuments || []
+            });
+        });
+
+        // DEBUG: Press '8' to trigger Mom's call instantly
+        this.input.keyboard.on('keydown-EIGHT', () => {
+            console.log('DEBUG: Triggering Mom\'s call instantly');
+            this.triggerPhoneCall();
         });
 
         // Show notification after fade in completes
@@ -1258,16 +1301,6 @@ class OfficeScene extends Phaser.Scene {
                     { text: 'Dude, you\'ve been MIA for weeks.' },
                     { text: 'We all miss you. I miss you.' },
                     { text: 'Talk to me. What\'s going on?' }
-                ]
-            },
-            {
-                name: 'Dr. Williams',
-                relationship: 'Doctor',
-                actualAspect: 'Need for Physical Health',
-                dialogue: [
-                    { text: 'You missed your appointment. Again.' },
-                    { text: 'Your health can\'t wait for your work schedule.' },
-                    { text: 'Please. Take care of yourself.' }
                 ]
             }
         ];

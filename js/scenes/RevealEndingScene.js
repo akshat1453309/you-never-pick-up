@@ -19,6 +19,17 @@ class RevealEndingScene extends Phaser.Scene {
         console.log('🔧 === REVEAL ENDING SCENE INIT COMPLETE ===');
     }
 
+    getProfileKey(callerName) {
+        const mapping = {
+            'Mom': 'profile_mom',
+            'Sarah': 'profile_sarah',
+            'Professor Chen': 'profile_professor_chen',
+            'Emma': 'profile_emma',
+            'Marcus': 'profile_marcus'
+        };
+        return mapping[callerName] || null;
+    }
+
     create() {
         console.log('✨ === REVEAL ENDING SCENE CREATE ===');
         console.log('📊 Data received - Ignored:', this.ignoredCalls, 'Total:', this.totalCalls);
@@ -76,8 +87,7 @@ class RevealEndingScene extends Phaser.Scene {
             { name: 'Sarah', was: 'Your need for love' },
             { name: 'Professor Chen', was: 'Your need to grow' },
             { name: 'Emma', was: 'Your need for joy' },
-            { name: 'Marcus', was: 'Your need for friendship' },
-            { name: 'Dr. Williams', was: 'Your need for health' }
+            { name: 'Marcus', was: 'Your need for friendship' }
         ];
 
         let delay = 0;
@@ -97,6 +107,37 @@ class RevealEndingScene extends Phaser.Scene {
     revealSingleCaller(reveal, width, height, index) {
         // Calculate vertical spacing to stack them
         const yPos = height / 2 - 150 + (index * 60);
+
+        // Get profile picture key
+        const profileKey = this.getProfileKey(reveal.name);
+        let profilePic = null;
+        let profileBg = null;
+
+        if (profileKey && this.textures.exists(profileKey)) {
+            // Add background circle so image is visible even with dark backgrounds
+            profileBg = this.add.circle(width / 2 - 100, yPos, 21, 0x333333)
+                .setAlpha(0);
+
+            // Show profile picture (small, left of name)
+            profilePic = this.add.image(width / 2 - 100, yPos, profileKey)
+                .setDisplaySize(40, 40)
+                .setOrigin(0.5)
+                .setAlpha(0);
+
+            // Create circular mask
+            const maskCircle = this.make.graphics({ x: 0, y: 0, add: false });
+            maskCircle.fillStyle(0xffffff);
+            maskCircle.fillCircle(width / 2 - 100, yPos, 20);
+            const mask = maskCircle.createGeometryMask();
+            profilePic.setMask(mask);
+
+            // Fade in both background and profile picture
+            this.tweens.add({
+                targets: [profileBg, profilePic],
+                alpha: 1,
+                duration: 1500
+            });
+        }
 
         // Show caller name first
         const nameText = this.add.text(width / 2, yPos, reveal.name, {
@@ -139,9 +180,17 @@ class RevealEndingScene extends Phaser.Scene {
 
         // After 3.5 seconds, reveal the truth
         this.time.delayedCall(3500, () => {
-            // Completely remove old texts
+            // Fade out profile picture, background, and name
+            const fadeTargets = [nameText];
+            if (profilePic) {
+                fadeTargets.push(profilePic);
+            }
+            if (profileBg) {
+                fadeTargets.push(profileBg);
+            }
+
             this.tweens.add({
-                targets: [nameText],
+                targets: fadeTargets,
                 alpha: 0,
                 duration: 500
             });
