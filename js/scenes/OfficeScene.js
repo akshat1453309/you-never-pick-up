@@ -13,29 +13,11 @@ class OfficeScene extends Phaser.Scene {
         // Load office desk background
         this.load.image('office_desk', 'assets/images/office_desk_rough.png');
 
-        // Load profile pictures for all characters (used in PhoneInterruptionScene and RevealEndingScene)
-        console.log('[OfficeScene] Loading profile pictures...');
+        // Load profile pictures for all characters
         this.load.image('profile_mom', 'assets/characters/mom.png');
-        // TODO: Load other character profiles when ready
-        // this.load.image('profile_sarah', 'assets/characters/sarah.png');
-        // this.load.image('profile_professor_chen', 'assets/characters/professor_chen.png');
-        // this.load.image('profile_emma', 'assets/characters/emma.png');
-        // this.load.image('profile_marcus', 'assets/characters/marcus.png');
-
-        // Listen for load errors
-        this.load.on('loaderror', (file) => {
-            console.error('[OfficeScene] ❌ Failed to load:', file.key, file.src);
-        });
-
-        this.load.on('complete', () => {
-            console.log('[OfficeScene] ✅ All assets loaded');
-        });
     }
 
     init(data) {
-        console.log('=== OFFICE SCENE INIT ===');
-        console.log('Received data:', data);
-
         this.workDay = data.workDay || 1;
         this.money = data.money || 0;
         this.ignoredCalls = data.ignoredCalls || 0;
@@ -43,8 +25,6 @@ class OfficeScene extends Phaser.Scene {
         this.health = data.health || 100;
         this.documentsCompleted = 0;
         this.usedDocuments = data.usedDocuments || [];
-
-        console.log('Health set to:', this.health);
 
         // Health drains passively over time
         this.healthDrainRate = 0.05; // 0.05% health per 100ms = 0.5% per second
@@ -88,36 +68,11 @@ class OfficeScene extends Phaser.Scene {
         this.handleKeyPress = this.handleKeyPress.bind(this);
         this.handleDialogueKey = this.handleDialogueKey.bind(this);
 
-        // DEBUG: Press '5' to set health to 5% for quick testing
-        this.input.keyboard.on('keydown-FIVE', () => {
-            console.log('DEBUG: Setting health to 5%');
-            this.health = 5;
-            this.updateHealthVisualization();
-        });
-
-        // DEBUG: Press '7' to travel directly to shop
-        this.input.keyboard.on('keydown-SEVEN', () => {
-            console.log('DEBUG: Traveling to shop scene');
-            // Clean up before transition
-            if (this.timerEvent) this.timerEvent.remove();
-            if (this.healthDrainEvent) this.healthDrainEvent.remove();
-            this.input.keyboard.off('keydown', this.handleKeyPress, this);
-
-            // Jump to shop
-            this.scene.start('EndOfDayScene', {
-                workDay: this.workDay || 1,
-                money: this.money || 100,
-                ignoredCalls: this.ignoredCalls || 0,
-                totalCalls: this.totalCalls || 0,
-                health: this.health || 75,
-                usedDocuments: this.usedDocuments || []
-            });
-        });
-
-        // DEBUG: Press '8' to trigger Mom's call instantly
-        this.input.keyboard.on('keydown-EIGHT', () => {
-            console.log('DEBUG: Triggering Mom\'s call instantly');
-            this.triggerPhoneCall();
+        // DEBUG: Click to place green dot (uses global window.debugCoordMode)
+        this.input.on('pointerdown', (pointer) => {
+            if (!window.debugCoordMode) return;
+            this.add.circle(pointer.x, pointer.y, 5, 0x00ff00).setDepth(9999);
+            console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
         });
 
         // Show notification after fade in completes
@@ -125,9 +80,8 @@ class OfficeScene extends Phaser.Scene {
             this.showBossNotification();
         });
 
-        // Start phone call system immediately (can ring anytime, not just when typing)
+        // Start phone call system
         this.time.delayedCall(3000, () => {
-            console.log('Phone call system started');
             this.schedulePhoneCall();
         });
 
@@ -1072,19 +1026,15 @@ class OfficeScene extends Phaser.Scene {
         const delay = Phaser.Math.Between(15000, 25000);
 
         this.phoneCallTimeout = this.time.delayedCall(delay, () => {
-            // Phone can ring anytime, not just when typing
             if (!this.phoneActive) {
-                console.log('Triggering phone call!');
                 this.triggerPhoneCall();
             } else {
-                // If phone is already active, try again later
                 this.schedulePhoneCall();
             }
         });
     }
 
     triggerPhoneCall() {
-        console.log('Phone call triggered! Total calls:', this.totalCalls + 1);
         this.phoneActive = true;
         this.totalCalls++;
 
@@ -1214,17 +1164,9 @@ class OfficeScene extends Phaser.Scene {
     }
 
     triggerHeartAttack() {
-        // Prevent multiple triggers (can be called from multiple places when health hits 0)
-        if (this.heartAttackTriggered) {
-            console.log('❌ Heart attack already triggered, ignoring duplicate call');
-            return;
-        }
+        // Prevent multiple triggers
+        if (this.heartAttackTriggered) return;
         this.heartAttackTriggered = true;
-
-        console.log('💀 === TRIGGERING HEART ATTACK ===');
-        console.log('📊 Current Health:', this.health);
-        console.log('📞 Ignored Calls:', this.ignoredCalls, '/', this.totalCalls);
-        console.log('🎬 Active Scenes:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
 
         // Clean up events
         if (this.timerEvent) this.timerEvent.remove();
@@ -1239,16 +1181,11 @@ class OfficeScene extends Phaser.Scene {
             this.timerContainer.setVisible(false);
         }
 
-        // Transition to HeartAttackScene (let Phaser handle scene cleanup automatically)
-        console.log('🚀 Starting HeartAttackScene...');
-        console.log('🎬 Scenes before transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
-
+        // Transition to HeartAttackScene
         this.scene.start('HeartAttackScene', {
             ignoredCalls: this.ignoredCalls,
             totalCalls: this.totalCalls
         });
-
-        console.log('🎬 Scenes after transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
     }
 
     getCaller(callNumber) {
@@ -1368,7 +1305,6 @@ class OfficeScene extends Phaser.Scene {
     }
 
     shutdown() {
-        console.log('=== OFFICE SCENE SHUTDOWN ===');
         // Remove resize event listener to prevent null reference errors in other scenes
         this.scale.off('resize', this.handleResize, this);
 

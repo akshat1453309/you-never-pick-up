@@ -15,11 +15,14 @@ class HeartAttackScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('💔 === HEART ATTACK SCENE CREATE ===');
-        console.log('📊 Data received - Ignored:', this.ignoredCalls, 'Total:', this.totalCalls);
-        console.log('🎬 Active Scenes:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
-
         const { width, height } = this.cameras.main;
+
+        // DEBUG: Click to place green dot (uses global window.debugCoordMode)
+        this.input.on('pointerdown', (pointer) => {
+            if (!window.debugCoordMode) return;
+            this.add.circle(pointer.x, pointer.y, 5, 0x00ff00).setDepth(9999);
+            console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
+        });
 
         // Dark background
         this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
@@ -27,14 +30,6 @@ class HeartAttackScene extends Phaser.Scene {
         // Red overlay for heart attack effect
         this.redOverlay = this.add.rectangle(0, 0, width, height, 0xff0000, 0).setOrigin(0);
 
-        // DEBUG: Press SPACE to skip to reveal scene immediately
-        this.input.keyboard.on('keydown-SPACE', () => {
-            console.log('🔥 DEBUG: Forcing transition to RevealEndingScene');
-            this.scene.start('RevealEndingScene', {
-                ignoredCalls: this.ignoredCalls,
-                totalCalls: this.totalCalls
-            });
-        });
 
         // Sequence of events
         this.time.delayedCall(1000, () => {
@@ -44,8 +39,6 @@ class HeartAttackScene extends Phaser.Scene {
 
     showChestPain() {
         const { width, height } = this.cameras.main;
-
-        console.log('Showing chest pain...');
 
         const text1 = this.add.text(width / 2, height / 2 - 50, 'Your chest tightens.', {
             fontSize: '24px',
@@ -192,26 +185,14 @@ class HeartAttackScene extends Phaser.Scene {
 
         // Transition to ending reveal (let Phaser handle scene cleanup automatically)
         this.time.delayedCall(4500, () => {
-            console.log('🔄 === TRANSITIONING TO REVEAL ENDING SCENE ===');
-            console.log('📊 Data being passed:', {
-                ignoredCalls: this.ignoredCalls,
-                totalCalls: this.totalCalls
-            });
-            console.log('🎬 Scenes before transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
-
-            // Start next scene (Phaser will automatically clean up this scene)
             this.scene.start('RevealEndingScene', {
                 ignoredCalls: this.ignoredCalls,
                 totalCalls: this.totalCalls
             });
-
-            console.log('🎬 Scenes after transition:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
         });
     }
 
     shutdown() {
-        console.log('💔 === HEART ATTACK SCENE SHUTDOWN ===');
-        // Remove all keyboard listeners to prevent interference with other scenes
         this.input.keyboard.removeAllListeners();
     }
 }

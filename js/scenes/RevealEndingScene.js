@@ -6,17 +6,12 @@
 
 class RevealEndingScene extends Phaser.Scene {
     constructor() {
-        console.log('🏗️ === REVEAL ENDING SCENE CONSTRUCTOR ===');
         super({ key: 'RevealEndingScene' });
-        console.log('🏗️ === REVEAL ENDING SCENE CONSTRUCTOR COMPLETE ===');
     }
 
     init(data) {
-        console.log('🔧 === REVEAL ENDING SCENE INIT ===');
-        console.log('🔧 Data received:', data);
         this.ignoredCalls = data.ignoredCalls || 0;
         this.totalCalls = data.totalCalls || 0;
-        console.log('🔧 === REVEAL ENDING SCENE INIT COMPLETE ===');
     }
 
     getProfileKey(callerName) {
@@ -31,11 +26,14 @@ class RevealEndingScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('✨ === REVEAL ENDING SCENE CREATE ===');
-        console.log('📊 Data received - Ignored:', this.ignoredCalls, 'Total:', this.totalCalls);
-        console.log('🎬 Active Scenes:', this.scene.manager.scenes.filter(s => s.scene.isActive()).map(s => s.scene.key));
-
         const { width, height } = this.cameras.main;
+
+        // DEBUG: Click to place green dot (uses global window.debugCoordMode)
+        this.input.on('pointerdown', (pointer) => {
+            if (!window.debugCoordMode) return;
+            this.add.circle(pointer.x, pointer.y, 5, 0x00ff00).setDepth(9999);
+            console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
+        });
 
         // Pure black background
         this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);

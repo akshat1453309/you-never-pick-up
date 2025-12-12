@@ -102,51 +102,56 @@ class EndOfDayScene extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5);
 
-        // Initialize Debug Helper (if DebugHelper class is available)
-        if (typeof DebugHelper !== 'undefined') {
-            this.debugHelper = new DebugHelper(this);
-            console.log('[EndOfDayScene] DebugHelper initialized. Press D to toggle debug mode.');
-        } else {
-            console.warn('[EndOfDayScene] DebugHelper not found. Debug mode unavailable.');
-        }
+        // DEBUG: Click to place green dot (uses global window.debugCoordMode)
+        // Use top priority to capture clicks before shop items
+        this.input.on('pointerdown', (pointer) => {
+            if (!window.debugCoordMode) return;
+            this.add.circle(pointer.x, pointer.y, 5, 0x00ff00).setDepth(9999);
+            console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
+        });
+        this.input.topOnly = false; // Allow click to pass through to debug handler
     }
 
     createShopItems() {
         const { width, height } = this.cameras.main;
 
-        // Fixed prices - no price scaling
+        // Fixed prices and positions
         this.shopItems = [
             {
-                name: 'Food',
+                name: 'Cigarettes',
                 cost: 30,
                 healthRestore: 25,
-                description: 'A proper meal',
-                texture: 'cigerette_box', // Using cigarette box for now
-                label: 'Cigarette Box'
+                description: 'A smoke break',
+                texture: 'cigerette_box',
+                label: 'Cigarettes',
+                x: 429,
+                y: 807
             },
             {
                 name: 'Utilities',
                 cost: 50,
                 healthRestore: 15,
                 description: 'Pay bills, reduce stress',
-                texture: null, // No texture yet, will use placeholder
-                label: 'Utilities'
+                texture: null,
+                label: 'Utilities',
+                x: 97,
+                y: 822
             },
             {
                 name: 'Medicine',
                 cost: 40,
                 healthRestore: 30,
                 description: 'Treat your symptoms',
-                texture: null, // No texture yet, will use placeholder
-                label: 'Medicine'
+                texture: null,
+                label: 'Medicine',
+                x: 1528,
+                y: 824
             }
         ];
 
-        const startX = width / 2 - 300;
-        const y = height / 2;
-
         this.shopItems.forEach((item, index) => {
-            const x = startX + index * 300;
+            const x = item.x;
+            const y = item.y;
 
             // Create image or placeholder for item
             let itemSprite;
@@ -189,19 +194,13 @@ class EndOfDayScene extends Phaser.Scene {
                 };
             };
 
-            // Store event handlers that will be reattached by debug helper
+            // Store event handlers
             itemSprite._clickHandler = (pointer, localX, localY, event) => {
-                // Skip if debug mode is active
-                if (itemSprite._debugMode) {
-                    console.log('[Shop] Debug mode active - click handler ignored');
-                    return;
-                }
+                // Skip if coordinate debug mode is active
+                if (window.debugCoordMode) return;
 
                 // Skip if modal is already open
-                if (this.upgradeModal) {
-                    console.log('[Shop] Modal already open - ignoring click');
-                    return;
-                }
+                if (this.upgradeModal) return;
 
                 // Stop event propagation to prevent multiple triggers
                 if (event) {
@@ -219,17 +218,13 @@ class EndOfDayScene extends Phaser.Scene {
             };
 
             itemSprite._hoverEnterHandler = () => {
-                // Hover effects disabled when in debug mode
-                if (!itemSprite._debugMode) {
-                    // itemSprite.setScale(itemSprite.texture ? 0.55 : 1.05);
+                if (!window.debugCoordMode) {
                     labelText.setColor('#4a90e2');
                 }
             };
 
             itemSprite._hoverExitHandler = () => {
-                // Hover effects disabled when in debug mode
-                if (!itemSprite._debugMode) {
-                    // itemSprite.setScale(itemSprite.texture ? 0.5 : 1);
+                if (!window.debugCoordMode) {
                     labelText.setColor('#ffffff');
                 }
             };
@@ -240,14 +235,6 @@ class EndOfDayScene extends Phaser.Scene {
             itemSprite.on('pointerover', itemSprite._hoverEnterHandler);
             itemSprite.on('pointerout', itemSprite._hoverExitHandler);
 
-            // Register with debug helper if available
-            if (this.debugHelper) {
-                this.debugHelper.registerObject(itemSprite, 'ui', `shop_item_${index}`, {
-                    itemName: item.name,
-                    cost: item.cost,
-                    healthRestore: item.healthRestore
-                });
-            }
         });
     }
 

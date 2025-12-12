@@ -19,6 +19,13 @@ class ConversationScene extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
+        // DEBUG: Click to place green dot (uses global window.debugCoordMode)
+        this.input.on('pointerdown', (pointer) => {
+            if (!window.debugCoordMode) return;
+            this.add.circle(pointer.x, pointer.y, 5, 0x00ff00).setDepth(9999);
+            console.log(`📍 Click: x=${Math.round(pointer.x)}, y=${Math.round(pointer.y)}`);
+        });
+
         // Create phone container (same as PhoneInterruptionScene)
         this.phoneContainer = this.add.container(0, 0).setDepth(500);
 

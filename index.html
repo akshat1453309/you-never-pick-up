@@ -33,8 +33,16 @@
 <body>
     <div id="game-container"></div>
 
-    <!-- Load utilities first -->
-    <script src="js/utils/DebugHelper.js"></script>
+    <!-- Global coordinate debug system -->
+    <script>
+        window.debugCoordMode = false;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'd' || e.key === 'D') {
+                window.debugCoordMode = !window.debugCoordMode;
+                console.log(`📍 Coordinate mode: ${window.debugCoordMode ? 'ON' : 'OFF'}`);
+            }
+        });
+    </script>
 
     <!-- Load game scenes -->
     <script src="js/scenes/OfficeScene.js"></script>
